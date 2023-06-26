@@ -2,8 +2,8 @@
 <html>
 
 <head>
-    <title>Create Product</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <title>Create Customer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .error-message {
             margin-bottom: 10px;
@@ -16,10 +16,10 @@
 
     <div class="container mt-4">
         <div class="page-header">
-            <h1>Create Product</h1>
+            <h1>Create Customer</h1>
         </div>
         <?php
-        $name = $description = $price = $promotion_price = $manufacture_date = $expired_date = '';
+        $username = $password = $first_name = $last_name = $gender = $date_of_birth = '';
 
         if ($_POST) {
             // Check if form data is submitted via POST method and include the necessary database connection file
@@ -28,47 +28,35 @@
             $errors = array(); // Array to store error messages
 
             // Check each field for empty values and store error messages in the $errors array
-            if (empty($_POST['name'])) {
-                $errors[] = "Name is required.";
+            if (empty($_POST['username'])) {
+                $errors[] = "Username is required.";
             } else {
-                $name = $_POST['name'];
+                $username = $_POST['username'];
             }
-            if (empty($_POST['description'])) {
-                $errors[] = "Description is required.";
+            if (empty($_POST['password'])) {
+                $errors[] = "Password is required.";
             } else {
-                $description = $_POST['description'];
+                $password = $_POST['password'];
             }
-            if (empty($_POST['price'])) {
-                $errors[] = "Price is required.";
-            } elseif (!is_numeric($_POST['price'])) {
-                $errors[] = "Price must be a numeric value.";
+            if (empty($_POST['first_name'])) {
+                $errors[] = "First Name is required.";
             } else {
-                $price = $_POST['price'];
+                $first_name = $_POST['first_name'];
             }
-            if (empty($_POST['promotion_price'])) {
-                $errors[] = "Promotion Price is required.";
-            } elseif (!is_numeric($_POST['promotion_price'])) {
-                $errors[] = "Promotion Price must be a numeric value.";
+            if (empty($_POST['last_name'])) {
+                $errors[] = "Last Name is required.";
             } else {
-                $promotion_price = $_POST['promotion_price'];
+                $last_name = $_POST['last_name'];
             }
-            if (empty($_POST['manufacture_date'])) {
-                $errors[] = "Manufacture Date is required.";
+            if (empty($_POST['gender'])) {
+                $errors[] = "Gender is required.";
             } else {
-                $manufacture_date = $_POST['manufacture_date'];
+                $gender = $_POST['gender'];
             }
-            if (empty($_POST['expired_date'])) {
-                $errors[] = "Expired Date is required.";
+            if (empty($_POST['date_of_birth'])) {
+                $errors[] = "Date of Birth is required.";
             } else {
-                $expired_date = $_POST['expired_date'];
-            }
-
-            // Check additional conditions
-            if ($promotion_price >= $price && !in_array("Promotion price must be cheaper than the original price.", $errors)) {
-                $errors[] = "Promotion price must be cheaper than the original price.";
-            }
-            if ($expired_date <= $manufacture_date && !in_array("Expired date must be later than the manufacture date.", $errors)) {
-                $errors[] = "Expired date must be later than the manufacture date.";
+                $date_of_birth = $_POST['date_of_birth'];
             }
 
             // Check for error messages
@@ -82,23 +70,25 @@
             } else {
                 try {
                     // Insert form data into the database
-                    $query = "INSERT INTO products SET name=:name, description=:description, price=:price, promotion_price=:promotion_price, manufacture_date=:manufacture_date, expired_date=:expired_date, created=:created";
+                    $query = "INSERT INTO customers SET username=:username, password=:password, first_name=:first_name, last_name=:last_name, gender=:gender, date_of_birth=:date_of_birth, registration_datetime=:registration_datetime, account_status=:account_status";
                     // Bind the parameters
                     $stmt = $con->prepare($query);
-                    $stmt->bindParam(':name', $name);
-                    $stmt->bindParam(':description', $description);
-                    $stmt->bindParam(':price', $price);
-                    $stmt->bindParam(':promotion_price', $promotion_price);
-                    $stmt->bindParam(':manufacture_date', $manufacture_date);
-                    $stmt->bindParam(':expired_date', $expired_date);
-                    $created = date('Y-m-d H:i:s');
-                    $stmt->bindParam(':created', $created);
+                    $stmt->bindParam(':username', $username);
+                    $stmt->bindParam(':password', $password);
+                    $stmt->bindParam(':first_name', $first_name);
+                    $stmt->bindParam(':last_name', $last_name);
+                    $stmt->bindParam(':gender', $gender);
+                    $stmt->bindParam(':date_of_birth', $date_of_birth);
+                    $registration_datetime = date('Y-m-d H:i:s');
+                    $stmt->bindParam(':registration_datetime', $registration_datetime);
+                    $account_status = "Active";
+                    $stmt->bindParam(':account_status', $account_status);
 
                     // Execute the query
                     if ($stmt->execute()) {
-                        echo "<div class='alert alert-success'>Record was saved.</div>";
+                        echo "<div class='alert alert-success'>Customer record was saved.</div>";
                     } else {
-                        echo "<div class='alert alert-danger'>Unable to save record.</div>";
+                        echo "<div class='alert alert-danger'>Unable to save customer record.</div>";
                     }
                 } catch (PDOException $exception) {
                     die('ERROR: ' . $exception->getMessage());
@@ -111,39 +101,46 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label for="name" class="form-label">Name</label>
-                        <input type="text" name="name" class="form-control" id="name" value="<?php echo $name; ?>">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" name="username" class="form-control" id="username" value="<?php echo $username; ?>">
                     </div>
                     <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea name="description" class="form-control" id="description" rows="5"><?php echo $description; ?></textarea>
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" id="password" value="<?php echo $password; ?>">
                     </div>
                     <div class="mb-3">
-                        <label for="price" class="form-label">Price</label>
-                        <input type="text" name="price" class="form-control" id="price" value="<?php echo $price; ?>">
+                        <label for="first_name" class="form-label">First Name</label>
+                        <input type="text" name="first_name" class="form-control" id="first_name" value="<?php echo $first_name; ?>">
                     </div>
                     <div class="mb-3">
-                        <label for="promotion_price" class="form-label">Promotion Price</label>
-                        <input type="text" name="promotion_price" class="form-control" id="promotion_price" value="<?php echo $promotion_price; ?>">
+                        <label for="last_name" class="form-label">Last Name</label>
+                        <input type="text" name="last_name" class="form-control" id="last_name" value="<?php echo $last_name; ?>">
                     </div>
                     <div class="mb-3">
-                        <label for="manufacture_date" class="form-label">Manufacture Date</label>
-                        <input type="date" name="manufacture_date" class="form-control" id="manufacture_date" value="<?php echo $manufacture_date; ?>">
+                        <label class="form-label">Gender</label><br>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="gender" id="gender_male" value="Male" <?php if ($gender == 'Male') echo 'checked'; ?>>
+                            <label class="form-check-label" for="gender_male">Male</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="gender" id="gender_female" value="Female" <?php if ($gender == 'Female') echo 'checked'; ?>>
+                            <label class="form-check-label" for="gender_female">Female</label>
+                        </div>
                     </div>
                     <div class="mb-3">
-                        <label for="expired_date" class="form-label">Expired Date</label>
-                        <input type="date" name="expired_date" class="form-control" id="expired_date" value="<?php echo $expired_date; ?>">
+                        <label for="date_of_birth" class="form-label">Date of Birth</label>
+                        <input type="date" name="date_of_birth" class="form-control" id="date_of_birth" value="<?php echo $date_of_birth; ?>">
                     </div>
                     <div class="mb-3">
                         <button type="submit" class="btn btn-primary">Save</button>
-                        <a href="index.php" class="btn btn-danger">Back to read products</a>
+                        <a href="customer_read.php" class="btn btn-danger">Back to Customer List</a>
                     </div>
                 </div>
             </div>
         </form>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
