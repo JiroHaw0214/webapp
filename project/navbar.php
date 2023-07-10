@@ -7,13 +7,19 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link" href="home.php">Home</a>
+                    <a class="nav-link" href="index.php">Home</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="product_create.php">Create Product</a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link" href="product_read.php">Product List</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link" href="customer_create.php">Create Customer</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="customer_read.php">Customer List</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="contact.php">Contact Us</a>

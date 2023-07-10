@@ -19,7 +19,7 @@
             <h1>Create Customer</h1>
         </div>
         <?php
-        $username = $password = $first_name = $last_name = $gender = $date_of_birth = '';
+        $username = $password = $confirm_password = $first_name = $last_name = $email = $gender = $date_of_birth = '';
 
         if ($_POST) {
             // Check if form data is submitted via POST method and include the necessary database connection file
@@ -38,6 +38,14 @@
             } else {
                 $password = $_POST['password'];
             }
+            if (empty($_POST['confirm_password'])) {
+                $errors[] = "Confirm Password is required.";
+            } else {
+                $confirm_password = $_POST['confirm_password'];
+                if ($password != $confirm_password) {
+                    $errors[] = "Passwords do not match.";
+                }
+            }
             if (empty($_POST['first_name'])) {
                 $errors[] = "First Name is required.";
             } else {
@@ -47,6 +55,11 @@
                 $errors[] = "Last Name is required.";
             } else {
                 $last_name = $_POST['last_name'];
+            }
+            if (empty($_POST['email'])) {
+                $errors[] = "Email is required.";
+            } else {
+                $email = $_POST['email'];
             }
             if (empty($_POST['gender'])) {
                 $errors[] = "Gender is required.";
@@ -69,14 +82,17 @@
                 echo "</div>";
             } else {
                 try {
+                    // Hash the password
+                    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
                     // Insert form data into the database
-                    $query = "INSERT INTO customers SET username=:username, password=:password, first_name=:first_name, last_name=:last_name, gender=:gender, date_of_birth=:date_of_birth, registration_datetime=:registration_datetime, account_status=:account_status";
+                    $query = "INSERT INTO customers SET username=:username, password=:password, first_name=:first_name, last_name=:last_name, gender=:gender, date_of_birth=:date_of_birth, email=:email, registration_datetime=:registration_datetime, account_status=:account_status";
                     // Bind the parameters
                     $stmt = $con->prepare($query);
                     $stmt->bindParam(':username', $username);
-                    $stmt->bindParam(':password', $password);
+                    $stmt->bindParam(':password', $hashed_password);
                     $stmt->bindParam(':first_name', $first_name);
                     $stmt->bindParam(':last_name', $last_name);
+                    $stmt->bindParam(':email', $email);
                     $stmt->bindParam(':gender', $gender);
                     $stmt->bindParam(':date_of_birth', $date_of_birth);
                     $registration_datetime = date('Y-m-d H:i:s');
@@ -91,7 +107,12 @@
                         echo "<div class='alert alert-danger'>Unable to save customer record.</div>";
                     }
                 } catch (PDOException $exception) {
-                    die('ERROR: ' . $exception->getMessage());
+                    //  die('ERROR: ' . $exception->getMessage());
+                    if ($exception->getCode() == 23000) {
+                        echo '<div class= "alert alert-danger role=alert">' . 'Username has been taken' . '</div>';
+                    } else {
+                        echo '<div class= "alert alert-danger role=alert">' . $exception->getMessage() . '</div>';
+                    }
                 }
             }
         }
@@ -109,6 +130,10 @@
                         <input type="password" name="password" class="form-control" id="password" value="<?php echo $password; ?>">
                     </div>
                     <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirm Password</label>
+                        <input type="password" name="confirm_password" class="form-control" id="confirm_password" value="<?php echo $confirm_password; ?>">
+                    </div>
+                    <div class="mb-3">
                         <label for="first_name" class="form-label">First Name</label>
                         <input type="text" name="first_name" class="form-control" id="first_name" value="<?php echo $first_name; ?>">
                     </div>
@@ -116,6 +141,11 @@
                         <label for="last_name" class="form-label">Last Name</label>
                         <input type="text" name="last_name" class="form-control" id="last_name" value="<?php echo $last_name; ?>">
                     </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" id="email" value="<?php echo $email; ?>">
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label">Gender</label><br>
                         <div class="form-check form-check-inline">
