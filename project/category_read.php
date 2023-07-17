@@ -39,7 +39,7 @@
                 // Fetch and display each category record
                 while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     echo '<tr>
-                            <td>' . $row['category_id'] . '</td>
+                            <td>' . $row['id'] . '</td>
                             <td>' . $row['category_name'] . '</td>
                             <td>' . $row['description'] . '</td>
                           </tr>';
