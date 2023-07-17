@@ -20,7 +20,7 @@
             $password = $_POST['password'];
 
             if (empty($username_email) || empty($password)) {
-                echo "<div class='alert alert-danger'>Please enter both username/email and password.</div>";
+                echo "<div class='alert alert-danger'>Please enter username/email and password.</div>";
             } else {
                 try {
                     // Check if the entered username/email and password match the data in the database
