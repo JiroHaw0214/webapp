@@ -30,7 +30,6 @@
                     $stmt->bindParam(':email', $username_email);
                     $stmt->execute();
                     $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
                     if ($row) {
                         // Verify password
                         if (password_verify($password, $row['password'])) {
