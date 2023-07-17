@@ -12,7 +12,7 @@
 </head>
 
 <body>
-    <?php include 'navbar.php'; ?>
+    <?php include 'includes/navbar.php'; ?>
 
     <div class="container mt-4">
         <div class="page-header">

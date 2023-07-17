@@ -8,7 +8,7 @@
 </head>
 
 <body>
-    <?php include 'navbar.php'; ?>
+    <?php include 'includes/navbar.php'; ?>
     <!-- container -->
     <div class="container">
         <div class="page-header">
