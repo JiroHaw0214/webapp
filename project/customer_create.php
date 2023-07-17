@@ -127,7 +127,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
-                        <input type="password" name="password" class="form-control" id="password" value="<?php echo $password; ?>">
+                        <input type="password" name="password" class="form-control" id="password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{6,}" title="Minimum 6 characters, starts with a letter, and allows only _ or - in between." value="<?php echo $password; ?>">
                     </div>
                     <div class="mb-3">
                         <label for="confirm_password" class="form-label">Confirm Password</label>
