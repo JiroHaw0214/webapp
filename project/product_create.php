@@ -97,6 +97,9 @@
                     // Execute the query
                     if ($stmt->execute()) {
                         echo "<div class='alert alert-success'>Record was saved.</div>";
+
+                        // Reset form fields
+                        $name = $description = $price = $promotion_price = $manufacture_date = $expired_date = '';
                     } else {
                         echo "<div class='alert alert-danger'>Unable to save record.</div>";
                     }

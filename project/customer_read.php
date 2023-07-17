@@ -3,97 +3,108 @@
 
 <head>
     <title>Customer List</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <!-- Latest compiled and minified Bootstrap CSS -->
 </head>
 
 <body>
-    <?php include 'includes/navbar.php'; ?>
+    <!-- container -->
     <div class="container">
+        <?php
+        include 'includes/navbar.php';
+        ?>
         <div class="page-header">
             <h1>Customer List</h1>
         </div>
-        <div class="mb-3">
-            <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="GET" class="form-inline">
-                <label for="search_keyword" class="form-label">Search Customer:</label>
-                <input type="text" name="search_keyword" class="form-control mx-sm-2" id="search_keyword" placeholder="Enter name, username, or email" value="<?php echo isset($_GET['search_keyword']) ? htmlspecialchars($_GET['search_keyword'], ENT_QUOTES) : ''; ?>">
-                <button type="submit" class="btn btn-primary">Search</button>
-            </form>
-        </div>
+
+        <form class="d-flex" action="<?php echo $_SERVER["PHP_SELF"]; ?>" method="GET">
+            <input class="form-control me-2 mb-2" type="text" name="search" placeholder="Search" aria-label="Search" value="<?php echo isset($_GET['search_keyword']) ? htmlspecialchars($_GET['search_keyword'], ENT_QUOTES) : ''; ?>">
+            <button class="btn btn-outline-success mb-2" type="submit">Search</button>
+        </form>
+
+        <!-- PHP code to read records will be here -->
         <?php
-        // Include the database connection
+        // include database connection
         include 'config/database.php';
-
-        // Check if search keyword is provided
-        $search_keyword = isset($_GET['search_keyword']) ? $_GET['search_keyword'] : '';
-
-        // Prepare the query to select customers
-        $query = "SELECT id, username, first_name, last_name, email, gender, date_of_birth FROM customers";
-
-        if (!empty($search_keyword)) {
-            // Add the search condition to the query
-            $query .= " WHERE username LIKE :search_keyword
-                        OR first_name LIKE :search_keyword
-                        OR last_name LIKE :search_keyword
-                        OR email LIKE :search_keyword";
+        $searchKeyword = isset($_GET['search']) ? $_GET['search'] : '';
+        $query = "SELECT id, username, first_name, last_name, email FROM customers";
+        if (!empty($searchKeyword)) {
+            $query .= " WHERE username LIKE :keyword OR first_name LIKE :keyword OR last_name LIKE :keyword OR email LIKE :keyword";
+            $searchKeyword = "%{$searchKeyword}%";
         }
-
         $query .= " ORDER BY id DESC";
-
-        // Prepare the query statement
         $stmt = $con->prepare($query);
-
-        // Bind the search keyword parameter if it exists
-        if (!empty($search_keyword)) {
-            $search_keyword = '%' . $search_keyword . '%';
-            $stmt->bindParam(':search_keyword', $search_keyword);
+        if (!empty($searchKeyword)) {
+            $stmt->bindParam(':keyword', $searchKeyword);
         }
+        // delete message prompt will be here
 
-        // Execute the query
+        // select all data
+
         $stmt->execute();
 
-        // Check if there are any records
+        // this is how to get number of rows returned
         $num = $stmt->rowCount();
 
-        // If there are records, display them in a table
+        // link to create record form
+        echo "<a href='customer_read.php' class='btn btn-primary mb-3'>Create New Customers</a>";
+
+        //check if more than 0 record found
         if ($num > 0) {
-            echo "<table class='table table-hover table-responsive table-bordered'>";
+
+            // data from database will be here
+            echo "<table class='table table-hover table-responsive table-bordered'>"; //start table
+
+            //creating our table heading
             echo "<tr>";
             echo "<th>ID</th>";
             echo "<th>Username</th>";
             echo "<th>First Name</th>";
             echo "<th>Last Name</th>";
             echo "<th>Email</th>";
-            echo "<th>Gender</th>";
-            echo "<th>Date of Birth</th>";
             echo "<th>Action</th>";
             echo "</tr>";
 
+            // table body will be here
+            // retrieve our table contents
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                // extract row
+                // this will make $row['firstname'] to just $firstname only
                 extract($row);
-
+                // creating new table row per record
                 echo "<tr>";
                 echo "<td>{$id}</td>";
                 echo "<td>{$username}</td>";
                 echo "<td>{$first_name}</td>";
                 echo "<td>{$last_name}</td>";
                 echo "<td>{$email}</td>";
-                echo "<td>{$gender}</td>";
-                echo "<td>{$date_of_birth}</td>";
                 echo "<td>";
+                // read one record
                 echo "<a href='customer_read_one.php?id={$id}' class='btn btn-info me-3'>Read</a>";
+
+                // we will use this links on next part of this post
                 echo "<a href='customer_update.php?id={$id}' class='btn btn-primary me-3'>Edit</a>";
-                echo "<a href='#' onclick='delete_customer({$id});' class='btn btn-danger'>Delete</a>";
+
+                // we will use this links on next part of this post
+                echo "<a href='#' onclick='customer_delete({$id});'  class='btn btn-danger'>Delete</a>";
                 echo "</td>";
                 echo "</tr>";
             }
 
+
+            // end table
             echo "</table>";
         } else {
             echo "<div class='alert alert-danger'>No records found.</div>";
         }
         ?>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
+    </div> <!-- end .container -->
+
+    <!-- confirm delete record will be here -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 </body>
 
 </html>

@@ -10,16 +10,22 @@
                     <a class="nav-link" href="index.php">Home</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="product_create.php">Create Product</a>
+                    <a class="nav-link" href="product_create.php">Product</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="product_read.php">Product List</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="customer_create.php">Create Customer</a>
+                    <a class="nav-link" href="customer_create.php">Customer</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="customer_read.php">Customer List</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="category_create.php">Category</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="category_read.php">Category List</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="contact.php">Contact Us</a>

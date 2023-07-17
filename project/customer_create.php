@@ -80,6 +80,10 @@
                     echo "<p class='error-message'>$error</p>";
                 }
                 echo "</div>";
+
+                // Reset password field
+                $password = '';
+                $confirm_password = '';
             } else {
                 try {
                     // Hash the password
@@ -103,11 +107,13 @@
                     // Execute the query
                     if ($stmt->execute()) {
                         echo "<div class='alert alert-success'>Customer record was saved.</div>";
+
+                        // Reset form fields
+                        $username = $password = $confirm_password = $first_name = $last_name = $email = $gender = $date_of_birth = '';
                     } else {
                         echo "<div class='alert alert-danger'>Unable to save customer record.</div>";
                     }
                 } catch (PDOException $exception) {
-                    //  die('ERROR: ' . $exception->getMessage());
                     if ($exception->getCode() == 23000) {
                         echo '<div class= "alert alert-danger role=alert">' . 'Username has been taken' . '</div>';
                     } else {
