@@ -4,11 +4,7 @@
 <head>
     <title>Products List</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
-
-
-
 </head>
-
 
 <body>
     <!-- container -->
@@ -32,12 +28,14 @@
 
         // delete message prompt will be here
         $searchKeyword = isset($_GET['search']) ? $_GET['search'] : '';
-        $query = "SELECT id, name, description, price,promotion_price FROM products";
+        $query = "SELECT p.id, p.name, p.description, p.price, p.promotion_price, c.category_name 
+                  FROM products p 
+                  LEFT JOIN category c ON p.category_id = c.id";
         if (!empty($searchKeyword)) {
-            $query .= " WHERE name LIKE :keyword";
+            $query .= " WHERE p.name LIKE :keyword";
             $searchKeyword = "%{$searchKeyword}%";
         }
-        $query .= " ORDER BY id DESC";
+        $query .= " ORDER BY p.id DESC";
         $stmt = $con->prepare($query);
         if (!empty($searchKeyword)) {
             $stmt->bindParam(':keyword', $searchKeyword);
@@ -45,24 +43,25 @@
         // select all data
         $stmt->execute();
 
-        // this is how to get number of rows returned
+        // this is how to get the number of rows returned
         $num = $stmt->rowCount();
 
         // link to create record form
         echo "<a href='product_create.php' class='btn btn-primary mb-3'>Create New Product</a>";
 
-        //check if more than 0 record found
+        // check if more than 0 records found
         if ($num > 0) {
 
-            // data from database will be here
+            // data from the database will be here
             echo "<table class='table table-hover table-responsive table-bordered'>"; //start table
 
-            //creating our table heading
+            // creating our table heading
             echo "<tr>";
             echo "<th>ID</th>";
             echo "<th>Name</th>";
             echo "<th>Description</th>";
             echo "<th>Price</th>";
+            echo "<th>Category</th>"; // New column for Category
             echo "<th>Action</th>";
             echo "</tr>";
 
@@ -72,7 +71,7 @@
                 // extract row
                 // this will make $row['firstname'] to just $firstname only
                 extract($row);
-                // creating new table row per record
+                // creating a new table row per record
                 echo "<tr>";
                 echo "<td>{$id}</td>";
                 echo "<td>{$name}</td>";
@@ -88,19 +87,17 @@
                     echo number_format($price, 2);
                 }
                 echo "</td>";
+                echo "<td>{$category_name}</td>"; // Display category name
                 echo "<td>";
                 // read one record
                 echo "<a href='product_read_one.php?id={$id}' class='btn btn-info me-3'>Read</a>";
 
-                // we will use this links on next part of this post
+                // we will use these links in the next part of this post
                 echo "<a href='product_update.php?id={$id}' class='btn btn-primary me-3'>Edit</a>";
-
-                // we will use this links on next part of this post
                 echo "<a href='#' onclick='delete_product({$id});'  class='btn btn-danger'>Delete</a>";
                 echo "</td>";
                 echo "</tr>";
             }
-
 
             // end table
             echo "</table>";
@@ -109,15 +106,10 @@
         }
         ?>
 
-
-
-
-
     </div> <!-- end .container -->
 
     <!-- confirm delete record will be here -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
-
 </body>
 
 </html>
