@@ -8,66 +8,71 @@
 
 <body>
     <?php include 'includes/navbar.php'; ?>
-
-    <div class="container mt-4">
+    <!-- container -->
+    <div class="container">
         <div class="page-header">
             <h1>Create New Order</h1>
         </div>
 
-        <!-- Your HTML form here to create a new order -->
+        <!-- Display success message -->
+        <?php
+        if (isset($_GET['order_created']) && $_GET['order_created'] == 1) {
+            echo '<div class="alert alert-success">Order created successfully!</div>';
+        }
+        ?>
+
+        <!-- Create New Order Form -->
         <form action="process_order.php" method="POST">
-            <!-- Customer dropdown menu -->
+            <!-- Customer listing select menu -->
             <div class="mb-3">
-                <label for="customer_name" class="form-label">Select Customer:</label>
-                <select name="customer_name" class="form-control" id="customer_name">
-                    <!-- PHP code to fetch and populate the customer names -->
+                <label for="customer">Select Customer:</label>
+                <select class="form-select" name="customer" id="customer">
                     <?php
                     // Include database connection
                     include 'config/database.php';
 
-                    // Fetch customer names from the database
-                    $query = "SELECT customer_name FROM customers";
-                    $stmt = $con->prepare($query);
-                    $stmt->execute();
-
-                    // Loop through the results and create options for the dropdown
-                    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                        $customer_name = $row['customer_name'];
-                        echo "<option value='$customer_name'>$customer_name</option>";
+                    // Fetch customers from the database
+                    $customer_query = "SELECT username FROM customers";
+                    $customer_stmt = $con->prepare($customer_query);
+                    $customer_stmt->execute();
+                    while ($customer_row = $customer_stmt->fetch(PDO::FETCH_ASSOC)) {
+                        echo "<option value='" . $customer_row['username'] . "'>" . $customer_row['username'] . "</option>";
                     }
                     ?>
                 </select>
             </div>
 
-            <!-- Product dropdown menus (You need three dropdowns for three products) -->
-            <div class="mb-3">
-                <label for="product_1" class="form-label">Select Product 1:</label>
-                <select name="product_1" class="form-control" id="product_1">
-                    <!-- PHP code to fetch and populate the product names -->
-                    <?php
-                    // Fetch product names from the database
-                    $query = "SELECT name FROM products";
-                    $stmt = $con->prepare($query);
-                    $stmt->execute();
+            <!-- Product dropdown menus and Quantity input fields -->
+            <?php
+            // Fetch products from the database 
+            $product_query = "SELECT id, name FROM products";
+            $product_stmt = $con->prepare($product_query);
+            $product_stmt->execute();
+            for ($i = 1; $i <= 3; $i++) { // Assuming you want to allow a maximum of three products per order
+                echo "<div class='mb-3'>";
+                echo "<label for='product_$i'>Select Product $i:</label>";
+                echo "<select class='form-select' name='product_$i' id='product_$i'>";
+                echo "<option value=''>Select a product</option>";
+                while ($product_row = $product_stmt->fetch(PDO::FETCH_ASSOC)) {
+                    echo "<option value='" . $product_row['id'] . "'>" . $product_row['name'] . "</option>";
+                }
+                // Reset the product statement to fetch products again
+                $product_stmt->execute();
+                echo "</select>";
+                echo "</div>";
 
-                    // Loop through the results and create options for the dropdown
-                    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                        $product_name = $row['name'];
-                        echo "<option value='$product_name'>$product_name</option>";
-                    }
-                    ?>
-                </select>
-            </div>
+                echo "<div class='mb-3'>";
+                echo "<label for='quantity_$i'>Quantity for Product $i:</label>";
+                echo "<input type='number' name='quantity_$i' id='quantity_$i' class='form-control'>";
+                echo "</div>";
+            }
+            ?>
 
-            <!-- Add two more similar dropdowns for the other two products -->
-
-            <!-- Other order details like quantity, etc. -->
-
-            <button type="submit" class="btn btn-primary">Place Order</button>
+            <button type="submit" class="btn btn-primary">Create Order</button>
         </form>
-    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    </div> <!-- end .container -->
+
 </body>
 
 </html>
