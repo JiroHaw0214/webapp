@@ -31,6 +31,8 @@
         $query = "SELECT p.id, p.name, p.description, p.price, p.promotion_price, c.category_name 
                   FROM products p 
                   LEFT JOIN category c ON p.category_id = c.id";
+                //   set p as alias for products table and c for category table
+                // 这是LEFT JOIN查询的一部分。它基于共同的列将"products"表（"p"）与"category"表（"c"）连接起来
         if (!empty($searchKeyword)) {
             $query .= " WHERE p.name LIKE :keyword";
             $searchKeyword = "%{$searchKeyword}%";
