@@ -1,78 +1,173 @@
-<!DOCTYPE HTML>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
-    <title>Create New Order</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <title>Create Order</title>
 </head>
 
 <body>
-    <?php include 'includes/navbar.php'; ?>
-    <!-- container -->
     <div class="container">
+        <?php
+        include 'includes/navbar.php';
+        ?>
         <div class="page-header">
             <h1>Create New Order</h1>
         </div>
 
-        <!-- Display success message -->
         <?php
-        if (isset($_GET['order_created']) && $_GET['order_created'] == 1) {
-            echo '<div class="alert alert-success">Order created successfully!</div>';
+        date_default_timezone_set('asia/Kuala_Lumpur');
+        // include database connection
+        include 'config/database.php';
+        $product_query = "SELECT id, name FROM products";
+        $product_stmt = $con->prepare($product_query);
+        $product_stmt->execute();
+        $products = $product_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if ($_POST) {
+            try {
+                $errors = array();
+                $quantity_array = $_POST['quantity'];
+                foreach ($quantity_array as $quantity) {
+                    if (empty($quantity)) {
+                        $errors[] = "Please fill in the quantity for all products.";
+                    } elseif ($quantity <= 0) {
+                        $errors[] = "Quantity must be greater than 0.";
+                    }
+                }
+
+                if (!empty($errors)) {
+                    echo "<div class='alert alert-danger'>";
+                    foreach ($errors as $displayError) {
+                        echo $displayError . "<br>";
+                    }
+                    echo "</div>";
+                } else {
+                    $summary_query = "INSERT INTO order_summary SET customer_id=:customer, order_date=:order_date";
+                    $customer = $_POST['customer'];
+                    $order_date = date('Y-m-d H:i:s'); // get the current date and time
+                    $summary_stmt = $con->prepare($summary_query);
+                    $summary_stmt->bindParam(':customer', $customer);
+                    $summary_stmt->bindParam(':order_date', $order_date);
+                    $summary_stmt->execute();
+                    // order details
+                    $details_query = "INSERT INTO order_details SET order_id=:order_id, customer_id=:customer_id, product_id=:product_id, quantity=:quantity";
+                    $order_id = $con->lastInsertId();
+                    $details_stmt = $con->prepare($details_query);
+                    $product_id = $_POST['product'];
+                    $quantity = $_POST['quantity'];
+                    for ($i = 0; $i < count($product_id); $i++) {
+                        // array
+                        $details_stmt->bindParam(':order_id', $order_id);
+                        $details_stmt->bindParam(':customer_id', $customer);
+                        $details_stmt->bindParam(':product_id', $product_id[$i]);
+                        $details_stmt->bindParam(':quantity', $quantity[$i]);
+                        $details_stmt->execute();
+                    }
+                    echo "<div class='alert alert-success'>Order successfully.</div>";
+                }
+            } catch (PDOException $exception) {
+                echo "<div class='alert alert-danger'>Error: " . $exception->getMessage() . "</div>";
+            }
         }
         ?>
 
-        <!-- Create New Order Form -->
-        <form action="process_order.php" method="POST" onsubmit="return validateForm()">
-            <!-- Customer listing select menu -->
-            <div class="mb-3">
-                <label for="customer">Select Customer:</label>
-                <select class="form-select" name="customer" id="customer" required>
-                    <option value="" selected disabled>Select Customer</option>
-                    <?php
-                    // Include database connection
-                    include 'config/database.php';
+        <form action="" method="POST">
+            <span>Select Customer</span>
+            <select class="form-select mb-3" name="customer" required>
+                <option value="" selected disabled>Choose a customer</option>
+                <?php
+                // Fetch customers from the database
+                $query = "SELECT id, first_name FROM customers";
+                $stmt = $con->prepare($query);
+                $stmt->execute();
+                $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-                    // Fetch customers from the database
-                    $customer_query = "SELECT id, first_name FROM customers";
-                    $customer_stmt = $con->prepare($customer_query);
-                    $customer_stmt->execute();
-                    while ($customer_row = $customer_stmt->fetch(PDO::FETCH_ASSOC)) {
-                        echo "<option value='" . $customer_row['id'] . "'>" . $customer_row['first_name'] . "</option>";
-                    }
-                    ?>
-                </select>
-            </div>
+                // Generate select options
+                foreach ($customers as $customer) {
+                    echo "<option value='{$customer['id']}'>{$customer['first_name']}</option>";
+                } ?>
+            </select>
 
-            <!-- Product dropdown menus and Quantity input fields -->
-            <?php
-            // Fetch products from the database 
-            $product_query = "SELECT id, name, price FROM products";
-            $product_stmt = $con->prepare($product_query);
-            $product_stmt->execute();
-            for ($i = 1; $i <= 3; $i++) { // Assuming you want to allow a maximum of three products per order
-                echo "<div class='mb-3'>";
-                echo "<label for='product_$i'>Select Product $i:</label>";
-                echo "<select class='form-select' name='product_$i' id='product_$i' required>";
-                echo "<option value='' selected disabled>Select a product</option>";
-                while ($product_row = $product_stmt->fetch(PDO::FETCH_ASSOC)) {
-                    echo "<option value='" . $product_row['id'] . "'>" . $product_row['name'] . "</option>";
-                }
-                // Reset the product statement to fetch products again
-                $product_stmt->execute();
-                echo "</select>";
-                echo "</div>";
+            <table class='table table-hover table-responsive table-bordered' id="row_del">
+                <tr>
+                    <td class="text-center">#</td>
+                    <td class="text-center">Product</td>
+                    <td class="text-center">Quantity</td>
+                    <td class="text-center">Action</td>
+                </tr>
+                <tr class="pRow">
+                    <td class="text-center">1</td>
+                    <td class="d-flex">
+                        <select class="form-select" name="product[]" required>
+                            <option value="" selected disabled>Choose a product</option>
+                            <?php
+                            // Generate select options
+                            foreach ($products as $product) {
+                                echo "<option value='{$product['id']}'>{$product['name']}</option>";
+                            }
+                            ?>
+                        </select>
+                    </td>
+                    <td><input class="form-control" type="number" name="quantity[]" required></td>
+                    <td><input href='#' onclick='deleteRow(this)' class='btn d-flex justify-content-center btn-danger mt-1' value="Delete" /></td>
+                </tr>
+                <tr>
+                    <td>
 
-                echo "<div class='mb-3'>";
-                echo "<label for='quantity_$i'>Quantity for Product $i:</label>";
-                echo "<input type='number' name='quantity_$i' id='quantity_$i' class='form-control' required min='1'>";
-                echo "</div>";
-            }
-            ?>
+                    </td>
+                    <td colspan="4">
+                        <input type="button" value="Add More Product" class="btn btn-success add_one" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
 
-            <button type="submit" class="btn btn-primary">Create Order</button>
+                    </td>
+                    <td colspan="4"><input type='submit' value='Place Order' class='btn btn-primary' /></td>
+                </tr>
+            </table>
         </form>
+        <script>
+            document.addEventListener('click', function(event) {
+                if (event.target.matches('.add_one')) {
+                    var rows = document.getElementsByClassName('pRow');
+                    // Get the last row in the table
+                    var lastRow = rows[rows.length - 1];
+                    // Clone the last row
+                    var clone = lastRow.cloneNode(true);
+                    // Insert the clone after the last row
+                    lastRow.insertAdjacentElement('afterend', clone);
 
-    </div> <!-- end .container -->
+                    // Loop through the rows
+                    for (var i = 0; i < rows.length; i++) {
+                        // Set the inner HTML of the first cell to the current loop iteration number
+                        rows[i].cells[0].innerHTML = i + 1;
+                    }
+                }
+            }, false);
+
+            function deleteRow(r) {
+                var total = document.querySelectorAll('.pRow').length;
+                if (total > 1) {
+                    var i = r.parentNode.parentNode.rowIndex;
+                    document.getElementById("row_del").deleteRow(i);
+
+                    var rows = document.getElementsByClassName('pRow');
+                    for (var i = 0; i < rows.length; i++) {
+                        // Set the inner HTML of the first cell to the current loop iteration number
+                        rows[i].cells[0].innerHTML = i + 1;
+                    }
+                } else {
+                    alert("You need to order at least one item.");
+                }
+            }
+        </script>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 </body>
 
 </html>
