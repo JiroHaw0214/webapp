@@ -27,56 +27,39 @@
         $products = $product_stmt->fetchAll(PDO::FETCH_ASSOC);
 
         if ($_POST) {
-            try {
-                $errors = array();
-                $quantity_array = $_POST['quantity'];
-                foreach ($quantity_array as $quantity) {
-                    if (empty($quantity)) {
-                        $errors[] = "Please fill in the quantity for all products.";
-                    } elseif ($quantity <= 0) {
-                        $errors[] = "Quantity must be greater than 0.";
-                    }
-                }
 
-                if (!empty($errors)) {
-                    echo "<div class='alert alert-danger'>";
-                    foreach ($errors as $displayError) {
-                        echo $displayError . "<br>";
-                    }
-                    echo "</div>";
-                } else {
-                    $summary_query = "INSERT INTO order_summary SET customer_id=:customer, order_date=:order_date";
-                    $customer = $_POST['customer'];
-                    $order_date = date('Y-m-d H:i:s'); // get the current date and time
-                    $summary_stmt = $con->prepare($summary_query);
-                    $summary_stmt->bindParam(':customer', $customer);
-                    $summary_stmt->bindParam(':order_date', $order_date);
-                    $summary_stmt->execute();
-                    // order details
-                    $details_query = "INSERT INTO order_details SET order_id=:order_id, customer_id=:customer_id, product_id=:product_id, quantity=:quantity";
-                    $order_id = $con->lastInsertId();
-                    $details_stmt = $con->prepare($details_query);
-                    $product_id = $_POST['product'];
-                    $quantity = $_POST['quantity'];
-                    for ($i = 0; $i < count($product_id); $i++) {
-                        // array
-                        $details_stmt->bindParam(':order_id', $order_id);
-                        $details_stmt->bindParam(':customer_id', $customer);
-                        $details_stmt->bindParam(':product_id', $product_id[$i]);
-                        $details_stmt->bindParam(':quantity', $quantity[$i]);
-                        $details_stmt->execute();
-                    }
-                    echo "<div class='alert alert-success'>Order successfully.</div>";
+            try {
+                $summary_query = "INSERT INTO order_summary SET customer_id=:customer, order_date=:order_date";
+                $customer = $_POST['customer'];
+                $order_date = date('Y-m-d H:i:s'); // get the current date and time
+                $summary_stmt = $con->prepare($summary_query);
+                $summary_stmt->bindParam(':customer', $customer);
+                $summary_stmt->bindParam(':order_date', $order_date);
+                $summary_stmt->execute();
+                // order details
+                $details_query = "INSERT INTO order_details SET order_id=:order_id, customer_id=:customer_id, product_id=:product_id, quantity=:quantity";
+                $order_id = $con->lastInsertId();
+                $details_stmt = $con->prepare($details_query);
+                $product_id = $_POST['product'];
+                $quantity = $_POST['quantity'];
+                for ($i = 0; $i < count($product_id); $i++) {
+                    // array
+                    $details_stmt->bindParam(':order_id', $order_id);
+                    $details_stmt->bindParam(':customer_id', $customer);
+                    $details_stmt->bindParam(':product_id', $product_id[$i]);
+                    $details_stmt->bindParam(':quantity', $quantity[$i]);
+                    $details_stmt->execute();
                 }
+                echo "<div class='alert alert-success'>Order successfully placed.</div>";
             } catch (PDOException $exception) {
-                echo "<div class='alert alert-danger'>Error: " . $exception->getMessage() . "</div>";
+                echo "<div class='alert alert-danger'>Unable to place order.</div>";
             }
         }
         ?>
 
         <form action="" method="POST">
             <span>Select Customer</span>
-            <select class="form-select mb-3" name="customer" required>
+            <select class="form-select mb-3" name="customer">
                 <option value="" selected disabled>Choose a customer</option>
                 <?php
                 // Fetch customers from the database
@@ -101,7 +84,7 @@
                 <tr class="pRow">
                     <td class="text-center">1</td>
                     <td class="d-flex">
-                        <select class="form-select" name="product[]" required>
+                        <select class="form-select" name="product[]">
                             <option value="" selected disabled>Choose a product</option>
                             <?php
                             // Generate select options
@@ -111,7 +94,7 @@
                             ?>
                         </select>
                     </td>
-                    <td><input class="form-control" type="number" name="quantity[]" required></td>
+                    <td><input class="form-control" type="number" name="quantity[]"></td>
                     <td><input href='#' onclick='deleteRow(this)' class='btn d-flex justify-content-center btn-danger mt-1' value="Delete" /></td>
                 </tr>
                 <tr>

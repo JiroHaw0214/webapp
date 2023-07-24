@@ -20,7 +20,7 @@
                     <a class="nav-link" href="category_read.php">Category List</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="create_order.php">Order</a>
+                    <a class="nav-link" href="order_read.php">Order List</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="contact.php">Contact Us</a>
