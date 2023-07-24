@@ -20,7 +20,7 @@
 
         try {
             // Select all categories from the database
-            $query = "SELECT * FROM order_summary";
+            $query = "SELECT order_summary.id, customers.first_name, order_summary.order_date FROM order_summary INNER JOIN customers ON order_summary.customer_id = customers.id";
             $stmt = $con->prepare($query);
             $stmt->execute();
 
@@ -44,24 +44,20 @@
                     // creating new table row per record
                     echo "<tr>";
                     echo "<td>{$id}</td>";
-                    echo "<td>{$username}</td>";
                     echo "<td>{$first_name}</td>";
-                    echo "<td>{$last_name}</td>";
-                    echo "<td>{$email}</td>";
+                    echo "<td>{$order_date}</td>";
                     echo "<td>";
                     // read one record
-                    echo "<a href='customer_read_one.php?id={$id}' class='btn btn-info me-3'>Read</a>";
+                    echo "<a href='order_read_one.php?id={$id}' class='btn btn-info me-3'>Read</a>";
 
                     // we will use this links on next part of this post
-                    echo "<a href='customer_update.php?id={$id}' class='btn btn-primary me-3'>Edit</a>";
+                    echo "<a href='order_update.php?id={$id}' class='btn btn-primary me-3'>Edit</a>";
 
                     // we will use this links on next part of this post
-                    echo "<a href='#' onclick='customer_delete({$id});'  class='btn btn-danger'>Delete</a>";
+                    echo "<a href='#' onclick='order_delete({$id});'  class='btn btn-danger'>Delete</a>";
                     echo "</td>";
                     echo "</tr>";
                 }
-
-
                 // end table
                 echo "</table>";
             } else {
@@ -71,10 +67,8 @@
             echo '<div class="alert alert-danger">' . $exception->getMessage() . '</div>';
         }
         ?>
-
         <a href="create_order.php" class="btn btn-primary">Create Order</a>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
