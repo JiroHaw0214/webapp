@@ -2,11 +2,11 @@
 // Include database connection
 include 'config/database.php';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+if ($_POST) {
     // Validate the form data and process the order
 
-    // Get customer username from the form
-    $customer_name = $_POST['customer'];
+    // Get customer ID from the form
+    $customer_id = $_POST['customer'];
 
     // Prepare and insert order_summary record
     try {
@@ -15,9 +15,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Insert order_summary record
         $order_date = date("Y-m-d H:i:s");
-        $order_summary_query = "INSERT INTO order_summary (customer_name, order_date) VALUES (:customer_name, :order_date)";
+        $order_summary_query = "INSERT INTO order_summary (customer_id, order_date) VALUES (:customer_id, :order_date)";
         $order_summary_stmt = $con->prepare($order_summary_query);
-        $order_summary_stmt->bindParam(':customer_name', $customer_name);
+        $order_summary_stmt->bindParam(':customer_id', $customer_id);
         $order_summary_stmt->bindParam(':order_date', $order_date);
         $order_summary_stmt->execute();
 
@@ -47,11 +47,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $total_amount += $line_total;
 
                 // Insert order_details record
-                $order_details_query = "INSERT INTO order_details (order_id, product_id, quantity, line_total) VALUES (:order_id, :product_id, :quantity, :line_total)";
+                $order_details_query = "INSERT INTO order_details (order_id, product_id, quantity, price, line_total) VALUES (:order_id, :product_id, :quantity, :price, :line_total)";
                 $order_details_stmt = $con->prepare($order_details_query);
                 $order_details_stmt->bindParam(':order_id', $order_id);
                 $order_details_stmt->bindParam(':product_id', $product_id);
                 $order_details_stmt->bindParam(':quantity', $quantity);
+                $order_details_stmt->bindParam(':price', $product_row['price']);
                 $order_details_stmt->bindParam(':line_total', $line_total);
                 $order_details_stmt->execute();
             }
