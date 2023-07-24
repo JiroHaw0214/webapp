@@ -73,6 +73,7 @@
                         $order_details_stmt->execute();
                     }
                     echo "<div class='alert alert-success' role='alert'>Order Placed Successfully.</div>";
+                    $_POST = array();
                 }
             } catch (PDOException $exception) {
                 echo '<div class="alert alert-danger role=alert">' . $exception->getMessage() . '</div>';
