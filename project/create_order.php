@@ -73,29 +73,6 @@
         </form>
 
     </div> <!-- end .container -->
-
-    <script>
-        function validateForm() {
-            // Validate customer selection
-            var customerSelect = document.getElementById('customer');
-            if (customerSelect.value === "") {
-                alert("Please select a customer.");
-                return false;
-            }
-
-            // Validate quantity input fields
-            for (var i = 1; i <= 3; i++) {
-                var quantityInput = document.getElementById('quantity_' + i);
-                if (quantityInput.value === "") {
-                    alert("Please enter quantity for Product " + i + ".");
-                    return false;
-                }
-            }
-
-            return true;
-        }
-    </script>
-
 </body>
 
 </html>
