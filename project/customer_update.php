@@ -59,6 +59,8 @@
                         if ($new_password === $confirm_password) {
                             // Update the new password in the database
                             $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+                            // PASSWORD_DEFAULT 使用当前 PHP 版本中最安全的密码哈希算法
+                            // ARRAY 储存改密码
                             $update_password_query = "UPDATE customers SET password=:password WHERE id=:customer_id";
                             $update_password_stmt = $con->prepare($update_password_query);
                             $update_password_stmt->bindParam(':password', $hashed_password);
@@ -166,6 +168,7 @@
                     newPasswordInput.value = '';
                     confirmNewPasswordInput.value = '';
                     newPasswordInput.focus();
+                    // 清空 然后focus
                 }
             });
         </script>
