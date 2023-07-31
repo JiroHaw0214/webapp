@@ -34,22 +34,30 @@
                 if ($customer_id == "") {
                     $error[] = "Please choose your name.";
                 }
+
                 if (isset($selected_product_count)) {
                     for ($i = 0; $i < $selected_product_count; $i++) {
                         if ($product_id[$i] == "") {
                             $error[] = " Please choose product " . $i + 1 . ".";
                         }
+
                         if ($quantity[$i] == 0 || empty($quantity[$i])) {
                             $error[] = "Quantity cannot be zero or empty.";
                         } else if ($quantity[$i] < 0) {
                             $error[] = "Quantity cannot be negative.";
                         } else if (!is_numeric($quantity[$i])) {
-                            $error[] = "Quantity must be numberic.";
+                            $error[] = "Quantity must be numeric.";
                         }
                     }
                 }
+                $selected_products = array_unique($product_id);
+                $removed_duplicates = count($product_id) !== count($selected_products);
+                if ($removed_duplicates) {
+                    echo "<div class='alert alert-' role='alert'>Duplicate products were selected.</div>";
+                }
+
                 if (!empty($error)) {
-                    echo "<div class='alert alert-danger role='alert'>";
+                    echo "<div class='alert alert-danger' role='alert'>";
                     foreach ($error as $error_message) {
                         echo $error_message . "<br>";
                     }
@@ -63,12 +71,12 @@
                     $order_summary_stmt->bindParam(":customer_id", $customer_id);
                     $order_summary_stmt->bindParam(":order_date", $order_date);
                     $order_summary_stmt->execute();
-                    $order_id = $con->lastInsertId(); //Get the order_id from last inserted row.
+                    $order_id = $con->lastInsertId(); //Get the order_id from the last inserted row.
                     for ($i = 0; $i < $selected_product_count; $i++) {
                         $order_details_query = "INSERT INTO order_details SET order_id=:order_id, product_id=:product_id, quantity=:quantity";
                         $order_details_stmt = $con->prepare($order_details_query);
                         $order_details_stmt->bindParam(":order_id", $order_id);
-                        $order_details_stmt->bindParam(":product_id", $product_id[$i]);
+                        $order_details_stmt->bindParam(":product_id", $selected_products[$i]);
                         $order_details_stmt->bindParam(":quantity", $quantity[$i]);
                         $order_details_stmt->execute();
                     }
@@ -172,7 +180,7 @@
                             rows[i].cells[0].innerHTML = i + 1;
                         }
                     } else {
-                        alert("You need order at least one item.");
+                        alert("You need to order at least one item.");
                     }
                 }
             </script>
@@ -180,4 +188,5 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKr  diJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 </body>
+
 </html>
