@@ -24,6 +24,56 @@
                 $username = $_POST['username'];
                 $date_of_birth = $_POST['date_of_birth'];
 
+                // Validate password fields
+                if (empty($_POST['old_password']) || empty($_POST['new_password']) || empty($_POST['confirm_password'])) {
+                    echo "<div class='alert alert-danger'>All password fields are required.</div>";
+                } else {
+                    $old_password = $_POST['old_password'];
+                    $new_password = $_POST['new_password'];
+                    $confirm_password = $_POST['confirm_password'];
+
+                    // Fetch the customer's current password from the database
+                    $password_query = "SELECT password FROM customers WHERE id=:customer_id";
+                    $password_stmt = $con->prepare($password_query);
+                    $password_stmt->bindParam(':customer_id', $customer_id);
+                    $password_stmt->execute();
+                    $result = $password_stmt->fetch(PDO::FETCH_ASSOC);
+                    $current_password = $result['password'];
+
+                    if (strlen($new_password) < 8) {
+                        echo "<div class='alert alert-danger'>New password should be at least 8 characters long.</div>";
+                    } else {
+                        // Check if the new password matches the confirmation
+                        if ($new_password !== $confirm_password) {
+                            echo "<div class='alert alert-danger'>New password and confirm password do not match.</div>";
+                        } else {
+                            // Validate the old password
+                            if (!password_verify($old_password, $current_password)) {
+                                echo "<div class='alert alert-danger'>Old password is incorrect.</div>";
+                            } else {
+                                // Check if the new password is the same as the old password
+                                if ($new_password === $old_password) {
+                                    echo "<div class='alert alert-danger'>New password cannot be the same as the old password.</div>";
+                                } else {
+                                    // Update the new password in the database
+                                    $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+                                    $update_password_query = "UPDATE customers SET password=:password WHERE id=:customer_id";
+                                    $update_password_stmt = $con->prepare($update_password_query);
+                                    $update_password_stmt->bindParam(':password', $hashed_password);
+                                    $update_password_stmt->bindParam(':customer_id', $customer_id);
+
+                                    if ($update_password_stmt->execute()) {
+                                        echo "<div class='alert alert-success'>Customer Password updated successfully.</div>";
+                                    } else {
+                                        echo "<div class='alert alert-danger'>Error updating password.</div>";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Update customer details
                 $update_query = "UPDATE customers SET first_name=:first_name, last_name=:last_name, email=:email, gender=:gender, username=:username, date_of_birth=:date_of_birth WHERE id=:customer_id";
                 $update_stmt = $con->prepare($update_query);
                 $update_stmt->bindParam(':first_name', $first_name);
@@ -38,45 +88,6 @@
                     echo "<div class='alert alert-success'>Customer details updated successfully.</div>";
                 } else {
                     echo "<div class='alert alert-danger'>Error updating customer details.</div>";
-                }
-
-                // Check if the password fields are not empty and the new password is different from the old password
-                if (!empty($_POST['old_password']) && !empty($_POST['new_password']) && !empty($_POST['confirm_password'])) {
-                    $old_password = $_POST['old_password'];
-                    $new_password = $_POST['new_password'];
-                    $confirm_password = $_POST['confirm_password'];
-
-                    // Fetch the customer's current password from the database
-                    $password_query = "SELECT password FROM customers WHERE id=:customer_id";
-                    $password_stmt = $con->prepare($password_query);
-                    $password_stmt->bindParam(':customer_id', $customer_id);
-                    $password_stmt->execute();
-                    $result = $password_stmt->fetch(PDO::FETCH_ASSOC);
-                    $current_password = $result['password'];
-
-                    // Validate the old password and update the new password if valid
-                    if (password_verify($old_password, $current_password)) {
-                        if ($new_password === $confirm_password) {
-                            // Update the new password in the database
-                            $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-                            // PASSWORD_DEFAULT 使用当前 PHP 版本中最安全的密码哈希算法
-                            // ARRAY 储存改密码
-                            $update_password_query = "UPDATE customers SET password=:password WHERE id=:customer_id";
-                            $update_password_stmt = $con->prepare($update_password_query);
-                            $update_password_stmt->bindParam(':password', $hashed_password);
-                            $update_password_stmt->bindParam(':customer_id', $customer_id);
-
-                            if ($update_password_stmt->execute()) {
-                                echo "<div class='alert alert-success'>Password updated successfully.</div>";
-                            } else {
-                                echo "<div class='alert alert-danger'>Error updating password.</div>";
-                            }
-                        } else {
-                            echo "<div class='alert alert-danger'>New password and confirm password do not match.</div>";
-                        }
-                    } else {
-                        echo "<div class='alert alert-danger'>Old password is incorrect.</div>";
-                    }
                 }
             }
 
@@ -154,24 +165,6 @@
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
-
-        <script>
-            // Check if the new password is the same as the old password
-            const oldPasswordInput = document.getElementById('old_password');
-            const newPasswordInput = document.getElementById('new_password');
-            const confirmNewPasswordInput = document.getElementById('confirm_password');
-
-            document.querySelector('form').addEventListener('submit', function(event) {
-                if (oldPasswordInput.value === newPasswordInput.value) {
-                    event.preventDefault();
-                    alert("You entered the same password as the old password. Please choose a different password.");
-                    newPasswordInput.value = '';
-                    confirmNewPasswordInput.value = '';
-                    newPasswordInput.focus();
-                    // 清空 然后focus
-                }
-            });
-        </script>
     </body>
 
     </html>
