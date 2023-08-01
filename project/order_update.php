@@ -1,58 +1,63 @@
 <!DOCTYPE HTML>
 <html>
-
 <head>
-    <title>Create Order</title>
+    <title>Update Order</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
 </head>
-
 <body>
     <div class="container">
         <?php include 'includes/navbar.php'; ?>
         <div class="page-header">
-            <h1>Create Order</h1>
+            <h1>Update Order</h1>
         </div>
         <?php
         include 'config/database.php';
-        $customer_query = "SELECT id, first_name FROM customers";
-        $customer_stmt = $con->prepare($customer_query);
-        $customer_stmt->execute();
-        $customers = $customer_stmt->fetchAll(PDO::FETCH_ASSOC);
-        $product_query = "SELECT id, name FROM products";
-        $product_stmt = $con->prepare($product_query);
-        $product_stmt->execute();
-        $products = $product_stmt->fetchAll(PDO::FETCH_ASSOC);
-        $selected_product_count = 1;
+        // Check if order ID is provided
+        if (!isset($_GET['id'])) {
+            echo "<div class='alert alert-danger' role='alert'>Order ID not provided.</div>";
+            exit;
+        }
+        $order_id = $_GET['id'];
+        // Fetch order details from the database
+        $order_query = "SELECT * FROM order_summary WHERE id = :order_id";
+        $order_stmt = $con->prepare($order_query);
+        $order_stmt->bindParam(':order_id', $order_id, PDO::PARAM_INT);
+        $order_stmt->execute();
+        $order = $order_stmt->fetch(PDO::FETCH_ASSOC);
+        // Check if the order exists
+        if (!$order) {
+            echo "<div class='alert alert-danger' role='alert'>Order with ID $order_id not found.</div>";
+            exit;
+        }
+        $customer_id = $order['customer_id'];
+        date_default_timezone_set('Asia/Kuala_Lumpur');
+        $order_date = date('Y-m-d H:i:s');
         $error = array();
         $product_id = '';
         if ($_POST) {
             $product_id = $_POST["product"];
             $quantity = $_POST["quantity"];
-            $customer_id = $_POST['customer'];
             $selected_product_count = count($_POST['product']);
             try {
-                if ($customer_id == "") {
-                    $error[] = "Please choose your name.";
-                }
-
-                $selected_products = array_unique($product_id);
-                $removed_duplicates = count($product_id) !== count($selected_products);
-                if ($removed_duplicates) {
-                    $error[] = "<div role='alert'>Duplicate products were selected.</div>";
-                }
-
+                // Validate the form data
                 if (isset($selected_product_count)) {
+                    $selected_products = array();
                     for ($i = 0; $i < $selected_product_count; $i++) {
                         if ($product_id[$i] == "") {
-                            $error[] = " Please choose product " . $i + 1 . ".";
+                            $error[] = " Please choose product " . ($i + 1) . ".";
                         }
-
                         if ($quantity[$i] == 0 || empty($quantity[$i])) {
                             $error[] = "Quantity cannot be zero or empty.";
                         } else if ($quantity[$i] < 0) {
                             $error[] = "Quantity cannot be negative.";
                         } else if (!is_numeric($quantity[$i])) {
                             $error[] = "Quantity must be numeric.";
+                        }
+                        // Check for duplicate product selection
+                        if (in_array($product_id[$i], $selected_products)) {
+                            $error[] = "Product " . ($i + 1) . " is selected multiple times.";
+                        } else {
+                            $selected_products[] = $product_id[$i];
                         }
                     }
                 }
@@ -64,42 +69,38 @@
                     }
                     echo "</div>";
                 } else {
-                    $customer_id = $_POST['customer'];
-                    date_default_timezone_set('Asia/Kuala_Lumpur');
-                    $order_date = date('Y-m-d H:i:s');
-                    $order_summary_query = "INSERT INTO order_summary SET customer_id=:customer_id, order_date=:order_date";
-                    $order_summary_stmt = $con->prepare($order_summary_query);
-                    $order_summary_stmt->bindParam(":customer_id", $customer_id);
-                    $order_summary_stmt->bindParam(":order_date", $order_date);
-                    $order_summary_stmt->execute();
-                    $order_id = $con->lastInsertId(); //Get the order_id from the last inserted row.
+                    // Update the order in the database
+                    $update_order_query = "UPDATE order_summary SET order_date=:order_date WHERE id=:order_id";
+                    $update_order_stmt = $con->prepare($update_order_query);
+                    $update_order_stmt->bindParam(":order_date", $order_date);
+                    $update_order_stmt->bindParam(":order_id", $order_id, PDO::PARAM_INT);
+                    $update_order_stmt->execute();
+
+                    // Delete existing order details for this order
+                    $delete_details_query = "DELETE FROM order_details WHERE order_id=:order_id";
+                    $delete_details_stmt = $con->prepare($delete_details_query);
+                    $delete_details_stmt->bindParam(":order_id", $order_id, PDO::PARAM_INT);
+                    $delete_details_stmt->execute();
+
+                    // Insert updated order details into the database
                     for ($i = 0; $i < $selected_product_count; $i++) {
                         $order_details_query = "INSERT INTO order_details SET order_id=:order_id, product_id=:product_id, quantity=:quantity";
                         $order_details_stmt = $con->prepare($order_details_query);
-                        $order_details_stmt->bindParam(":order_id", $order_id);
-                        $order_details_stmt->bindParam(":product_id", $selected_products[$i]);
-                        $order_details_stmt->bindParam(":quantity", $quantity[$i]);
+                        $order_details_stmt->bindParam(":order_id", $order_id, PDO::PARAM_INT);
+                        $order_details_stmt->bindParam(":product_id", $product_id[$i], PDO::PARAM_INT);
+                        $order_details_stmt->bindParam(":quantity", $quantity[$i], PDO::PARAM_INT);
                         $order_details_stmt->execute();
                     }
-                    echo "<div class='alert alert-success' role='alert'>Order Placed Successfully.</div>";
-                    $_POST = array();
+
+                    echo "<div class='alert alert-success' role='alert'>Order updated successfully.</div>";
                 }
             } catch (PDOException $exception) {
-                echo '<div class="alert alert-danger role=alert">' . $exception->getMessage() . '</div>';
+                echo '<div class="alert alert-danger role="alert">' . $exception->getMessage() . '</div>';
             }
         }
         ?>
         <div>
             <form action="" method="post">
-                <select name="customer" id="customer" class="form-select w-50 my-4">
-                    <option value="">Choose your name</option>
-                    <?php
-                    for ($a = 0; $a < count($customers); $a++) {
-                        $customer_selected = isset($_POST["customer"]) && $customers[$a]['id'] == $_POST["customer"] ? "selected" : "";
-                        echo "<option value='{$customers[$a]['id']}' $customer_selected>{$customers[$a]['first_name']}</option>";
-                    }
-                    ?>
-                </select>
                 <table class="table table-hover table-responsive table-bordered" id="row_del">
                     <tr>
                         <th>NO.</th>
@@ -108,30 +109,50 @@
                         <th>Actions</th>
                     </tr>
                     <?php
-                    $product_loop = (!empty($error)) ? $selected_product_count : 1;
-                    for ($a = 0; $a < $product_loop; $a++) {
+                    // Fetch all products from the database
+                    $product_query = "SELECT id, name FROM products";
+                    $product_stmt = $con->prepare($product_query);
+                    $product_stmt->execute();
+                    $products = $product_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                    // Fetch existing order details from the database
+                    $order_details_query = "SELECT * FROM order_details WHERE order_id=:order_id";
+                    $order_details_stmt = $con->prepare($order_details_query);
+                    $order_details_stmt->bindParam(':order_id', $order_id, PDO::PARAM_INT);
+                    $order_details_stmt->execute();
+                    $order_details = $order_details_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                    // Loop through existing order details and display them
+                    foreach ($order_details as $i => $order_detail) {
+                        $product_id = $order_detail['product_id'];
+                        $quantity = $order_detail['quantity'];
                     ?>
                         <tr class="pRow">
                             <td class="col-1">
-                                <?php echo $a + 1; ?>
+                                <?php echo $i + 1; ?>
                             </td>
                             <td>
                                 <select name="product[]" id="product" class="form-select" value>
                                     <option value="">Choose a Product</option>
                                     <?php
-                                    for ($i = 0; $i < count($products); $i++) {
-                                        $product_selected = isset($_POST["product"]) && $products[$i]['id'] == $_POST["product"][$a] ? "selected" : "";
-                                        echo "<option value='{$products[$i]['id']}' $product_selected>{$products[$i]['name']}</option>";
+                                    foreach ($products as $product) {
+                                        $product_selected = $product['id'] == $product_id ? "selected" : "";
+                                        echo "<option value='{$product['id']}' $product_selected>{$product['name']}</option>";
                                     }
                                     ?>
                                 </select>
                             </td>
                             <td>
-                                <input type="number" class="form-control" name="quantity[]" id="quantity" value="<?php echo isset($_POST['quantity']) ? $_POST['quantity'][$a] : 1; ?>">
-
+                                <input type="number" class="form-control" name="quantity[]" id="quantity" value="<?php echo $quantity; ?>">
                             </td>
                             <td>
-                                <input href='#' onclick='deleteRow(this)' class='btn d-flex justify-content-center btn-danger mt-1' readonly value="Delete" />
+                                <?php
+                                if ($i == 0) {
+                                    echo "<input class='btn d-flex justify-content-center btn-danger mt-1' disabled value='Delete' />";
+                                } else {
+                                    echo "<input onclick='deleteRow(this)' class='btn d-flex justify-content-center btn-danger mt-1' readonly value='Delete' />";
+                                }
+                                ?>
                             </td>
                         </tr>
                     <?php }
@@ -146,8 +167,8 @@
                 </table>
 
                 <div class="text-center">
-                    <button type="submit" class="btn btn-primary">Place Order</button>
-                    <a href="" class="btn btn-danger">Back to Read Order summary</a>
+                    <button type="submit" class="btn btn-primary">Update Order</button>
+                    <a href="order_read.php" class="btn btn-danger">Back to Read Order List</a>
                 </div>
             </form>
             <script>
