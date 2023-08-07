@@ -1,3 +1,7 @@
+<?php
+require_once 'session_check.php';
+checkSession();
+?>
 <!DOCTYPE html>
 <html>
 

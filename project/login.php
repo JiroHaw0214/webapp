@@ -1,5 +1,47 @@
-</html>
+<?php
+session_start();
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Check if form data is submitted via POST method and include the necessary database connection file
+    include 'config/database.php';
 
+    $username_email = $_POST['username_email'];
+    $password = $_POST['password'];
+
+    if (empty($username_email) || empty($password)) {
+        echo "<div class='alert alert-danger'>Please enter username/email and password.</div>";
+    } else {
+        try {
+            // Check if the entered username/email and password match the data in the database
+            $query = "SELECT id, username, email, password, account_status FROM customers WHERE username = :username OR email = :email";
+            $stmt = $con->prepare($query);
+            $stmt->bindParam(':username', $username_email);
+            $stmt->bindParam(':email', $username_email);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row) {
+                // Verify password
+                if (password_verify($password, $row['password'])) {
+                    // Check account status
+                    if ($row['account_status'] == 'Active') {
+                        // Login successful, set session variable and redirect to index.php
+                        $_SESSION['user_id'] = $row['id'];
+                        header("Location: index.php");
+                        exit;
+                    } else {
+                        echo "<div class='alert alert-danger'>Inactive account. Please contact the administrator.</div>";
+                    }
+                } else {
+                    echo "<div class='alert alert-danger'>Incorrect password.</div>";
+                }
+            } else {
+                echo "<div class='alert alert-danger'>Username/Email not found.</div>";
+            }
+        } catch (PDOException $exception) {
+            echo '<div class="alert alert-danger">' . $exception->getMessage() . '</div>';
+        }
+    }
+}
+?>
 <!DOCTYPE HTML>
 <html>
 
@@ -9,7 +51,7 @@
     <style>
         body {
             background-color: #f8f9fa;
-        }   
+        }
 
         .login-container {
             background-color: #ffffff;
@@ -34,48 +76,6 @@
                     <h2>Welcome to Product Management System</h2>
                     <p>Please login to access the system</p>
                 </div>
-                <?php
-                if ($_POST) {
-                    // Check if form data is submitted via POST method and include the necessary database connection file
-                    include 'config/database.php';
-
-                    $username_email = $_POST['username_email'];
-                    $password = $_POST['password'];
-
-                    if (empty($username_email) || empty($password)) {
-                        echo "<div class='alert alert-danger'>Please enter username/email and password.</div>";
-                    } else {
-                        try {
-                            // Check if the entered username/email and password match the data in the database
-                            $query = "SELECT id, username, email, password, account_status FROM customers WHERE username = :username OR email = :email";
-                            $stmt = $con->prepare($query);
-                            $stmt->bindParam(':username', $username_email);
-                            $stmt->bindParam(':email', $username_email);
-                            $stmt->execute();
-                            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-                            if ($row) {
-                                // Verify password
-                                if (password_verify($password, $row['password'])) {
-                                    // Check account status
-                                    if ($row['account_status'] == 'Active') {
-                                        // Login successful, redirect to index.php
-                                        header("Location: index.php");
-                                        exit;
-                                    } else {
-                                        echo "<div class='alert alert-danger'>Inactive account. Please contact the administrator.</div>";
-                                    }
-                                } else {
-                                    echo "<div class='alert alert-danger'>Incorrect password.</div>";
-                                }
-                            } else {
-                                echo "<div class='alert alert-danger'>Username/Email not found.</div>";
-                            }
-                        } catch (PDOException $exception) {
-                            echo '<div class="alert alert-danger">' . $exception->getMessage() . '</div>';
-                        }
-                    }
-                }
-                ?>
                 <form action="<?php echo $_SERVER["PHP_SELF"]; ?>" method="POST">
                     <div class="mb-3">
                         <label for="username_email" class="form-label">Username/Email</label>

@@ -1,5 +1,7 @@
-</html>
-
+<?php
+require_once 'session_check.php';
+checkSession();
+?>
 <!DOCTYPE HTML>
 <html>
 
