@@ -23,7 +23,7 @@
 
         try {
             // Select all categories from the database
-            $query = "SELECT order_summary.id, customers.first_name, order_summary.order_date FROM order_summary INNER JOIN customers ON order_summary.customer_id = customers.id";
+            $query = "SELECT order_summary.id, customers.first_name, order_summary.order_date FROM order_summary INNER JOIN customers ON order_summary.customer_id = customers.id ORDER BY order_summary.order_date DESC";
             $stmt = $con->prepare($query);
             $stmt->execute();
 
