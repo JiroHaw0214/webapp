@@ -26,7 +26,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         // Login successful, set session variable and redirect to index.php
                         $_SESSION['user_id'] = $row['id'];
                         header("Location: index.php");
-                        exit;
                     } else {
                         echo "<div class='alert alert-danger'>Inactive account. Please contact the administrator.</div>";
                     }
