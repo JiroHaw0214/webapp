@@ -8,9 +8,12 @@
 </head>
 
 <body>
-    <?php include 'includes/navbar.php'; ?>
     <!-- container -->
     <div class="container">
+        <?php
+        include 'includes/navbar.php';
+        ?>
+
         <div class="page-header">
             <h1>Product Detail</h1>
         </div>

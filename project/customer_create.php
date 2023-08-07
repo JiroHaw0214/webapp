@@ -12,9 +12,11 @@
 </head>
 
 <body>
-    <?php include 'includes/navbar.php'; ?>
+    <div class="container">
+        <?php
+        include 'includes/navbar.php';
+        ?>
 
-    <div class="container mt-4">
         <div class="page-header">
             <h1>Create Customer</h1>
         </div>

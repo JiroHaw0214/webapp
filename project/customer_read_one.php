@@ -7,8 +7,11 @@
 </head>
 
 <body>
-    <?php include 'includes/navbar.php'; ?>
     <div class="container">
+        <?php
+        include 'includes/navbar.php';
+        ?>
+
         <div class="page-header">
             <h1>Customer Detail</h1>
         </div>

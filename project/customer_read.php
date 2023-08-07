@@ -8,11 +8,11 @@
 </head>
 
 <body>
-    <!-- container -->
     <div class="container">
         <?php
         include 'includes/navbar.php';
         ?>
+
         <div class="page-header">
             <h1>Customer List</h1>
         </div>

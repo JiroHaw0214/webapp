@@ -7,9 +7,12 @@
 </head>
 
 <body>
-    <?php include 'includes/navbar.php'; ?>
 
     <div class="container">
+        <?php
+        include 'includes/navbar.php';
+        ?>
+
         <div class="page-header">
             <h1>Welcome to the Product Management System</h1>
         </div>

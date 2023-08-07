@@ -7,9 +7,12 @@
 </head>
 
 <body>
-    <?php include 'includes/navbar.php'; ?>
 
-    <div class="container mt-4">
+    <div class="container">
+        <?php
+        include 'includes/navbar.php';
+        ?>
+
         <div class="page-header">
             <h1>Order List</h1>
         </div>
