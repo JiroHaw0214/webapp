@@ -81,7 +81,7 @@
                         $order_details_stmt->bindParam(":quantity", $quantity[$i]);
                         $order_details_stmt->execute();
                     }
-                    echo "<div class='alert alert-success' role='alert'>Order Placed Successfully.</div>";
+                    echo "<div class='alert alert-success' role='alert'>Order Placed Successfully. <a href='order_read_one.php?id={$order_id}' class='btn btn-link'>View Order Details</a></div>";
                     $_POST = array();
                 }
             } catch (PDOException $exception) {
