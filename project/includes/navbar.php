@@ -48,6 +48,9 @@
                 <li class="nav-item">
                     <a class="nav-link" href="contact.php">Contact Us</a>
                 </li>
+                <li class="nav-item">
+                    <a href="logout.php" class="btn btn-danger">Logout</a>
+                </li>
             </ul>
         </div>
     </div>
