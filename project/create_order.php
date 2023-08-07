@@ -147,7 +147,7 @@
 
                 <div class="text-center">
                     <button type="submit" class="btn btn-primary">Place Order</button>
-                    <a href="" class="btn btn-danger">Back to Read Order summary</a>
+                    <a href="order_read.php" class="btn btn-danger">Back to Read Order Summary</a>
                 </div>
             </form>
             <script>
