@@ -15,7 +15,7 @@
         <?php
         $id = isset($_GET['id']) ? $_GET['id'] : die('ERROR: Record ID not found.');
         include 'config/database.php';
-        $query = "SELECT order_details.id, order_details.order_id, products.name, order_details.quantity FROM order_details INNER JOIN products ON order_details.product_id = products.id WHERE order_details.order_id =:id";
+        $query = "SELECT order_details.id, products.name, order_details.quantity, products.price, products.promotion_price FROM order_details INNER JOIN products ON order_details.product_id = products.id WHERE order_details.order_id =:id";
         $stmt = $con->prepare($query);
         $stmt->bindParam(":id", $id);
         $stmt->execute();
@@ -24,20 +24,41 @@
             echo "<div class='p-3'>";
             echo "<table class='table table-hover table-responsive table-bordered'>";
             echo "<tr>";
-            echo "<th>OrderDetail ID</th>";
-            echo "<th>Order ID</th>";
+            echo "<th>No.</th>";
             echo "<th>Product Name</th>";
             echo "<th>Quantity</th>";
+            echo "<th>Price</th>";
+            echo "<th>Total</th>";
             echo "</tr>";
+            $totalPrice = 0;
+            $counter = 1;
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 extract($row);
+                $productPrice = !empty($promotion_price) ? $promotion_price : $price;
+                $subtotal = $quantity * $productPrice;
+                $totalPrice += $subtotal;
                 echo "<tr>";
-                echo "<td>{$id}</td>";
-                echo "<td>{$order_id}</td>";
+                echo "<td>{$counter}</td>";
                 echo "<td>{$name}</td>";
                 echo "<td>{$quantity}</td>";
+                echo "<td class='text-end'>";
+                if (!empty($promotion_price)) {
+                    // Display promotion price if available
+                    echo "<div class='text-decoration-line-through'>" . number_format($price, 2) . "</div>";
+                    echo number_format($promotion_price, 2);
+                } else {
+                    // Display regular price
+                    echo number_format($price, 2);
+                }
+                echo "</td>";
+                echo "<td class='text-end'>" . number_format($subtotal, 2) . "</td>";
                 echo "</tr>";
+                $counter++;
             }
+            echo "<tr>";
+            echo "<td colspan='4' class='text-end'><strong>Total:</strong></td>";
+            echo "<td class='text-end'>" . number_format($totalPrice, 2) . "</td>"; // 添加 number_format 格式化
+            echo "</tr>";
             echo "</table>";
             echo "<a href='order_read.php' class='btn btn-danger'>Back to order list</a>";
             echo "</div>";
