@@ -135,7 +135,7 @@ checkSession();
 
                             </td>
                             <td>
-                                <input href='#' onclick='deleteRow(this)' class='btn d-flex justify-content-center btn-danger mt-1' readonly value="Delete" />
+                                <input href='order_delete.php?id={$id}' onclick='deleteRow(this)' class='btn d-flex justify-content-center btn-danger mt-1' readonly value="Delete" />
                             </td>
                         </tr>
                     <?php }
