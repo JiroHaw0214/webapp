@@ -8,7 +8,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST['password'];
 
     if (empty($username_email) || empty($password)) {
-        echo "<div class='alert alert-danger'>Please enter username/email and password.</div>";
+        $_SESSION['message'] = "Please enter username/email and password.";
     } else {
         try {
             // Check if the entered username/email and password match the data in the database
@@ -26,19 +26,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         // Login successful, set session variable and redirect to index.php
                         $_SESSION['user_id'] = $row['id'];
                         header("Location: index.php");
+                        exit;
                     } else {
-                        echo "<div class='alert alert-danger'>Inactive account. Please contact the administrator.</div>";
+                        $_SESSION['message'] = "Inactive account. Please contact the administrator.";
                     }
                 } else {
-                    echo "<div class='alert alert-danger'>Incorrect password.</div>";
+                    $_SESSION['message'] = "Incorrect password.";
                 }
             } else {
-                echo "<div class='alert alert-danger'>Username/Email not found.</div>";
+                $_SESSION['message'] = "Username/Email not found.";
             }
         } catch (PDOException $exception) {
-            echo '<div class="alert alert-danger">' . $exception->getMessage() . '</div>';
+            $_SESSION['message'] = $exception->getMessage();
         }
     }
+    header("Location: login.php"); // Redirect to login.php to display the message
+    exit;
+} elseif (isset($_SESSION['user_id'])) {
+    // If the user is already logged in, redirect to index.php
+    header("Location: index.php");
+    exit;
 }
 ?>
 <!DOCTYPE HTML>
@@ -68,12 +75,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 
 <body>
+    <?php
+    if (isset($_SESSION['message'])) {
+        echo '<p style="color: red;">' . $_SESSION['message'] . '</p>';
+        unset($_SESSION['message']); // Clear the message after displaying it
+    }
+    ?>
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-6 col-lg-4 login-container">
                 <div class="login-header">
                     <h2>Welcome to Product Management System</h2>
-                    <p>Please login to access the system</p>
                 </div>
                 <form action="<?php echo $_SERVER["PHP_SELF"]; ?>" method="POST">
                     <div class="mb-3">
