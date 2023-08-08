@@ -90,7 +90,7 @@ checkSession();
                 echo "<a href='customer_update.php?id={$id}' class='btn btn-primary me-3'>Edit</a>";
 
                 // we will use this links on next part of this post
-                echo "<a href='#' onclick='customer_delete({$id});'  class='btn btn-danger'>Delete</a>";
+                echo "<a href='customer_delete.php?id={$id}' onclick='customer_delete({$id});'  class='btn btn-danger'>Delete</a>";
                 echo "</td>";
                 echo "</tr>";
             }
