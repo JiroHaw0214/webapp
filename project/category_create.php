@@ -90,6 +90,7 @@ checkSession();
                 <textarea name="description" class="form-control" id="description" rows="5"><?php echo $description; ?></textarea>
             </div>
             <button type="submit" class="btn btn-primary">Create</button>
+            <a href="category_read.php" class="btn btn-secondary">Back</a>
         </form>
     </div>
 
