@@ -29,7 +29,12 @@ checkSession();
         <?php
         // include database connection
         include 'config/database.php';
+        $action = isset($_GET['action']) ? $_GET['action'] : "";
 
+        // if it was redirected from delete.php
+        if ($action == 'deleted') {
+            echo "<div class='alert alert-success'>Record was deleted.</div>";
+        }
         // delete message prompt will be here
         $searchKeyword = isset($_GET['search']) ? $_GET['search'] : '';
         $query = "SELECT p.id, p.name, p.description, p.price, p.promotion_price, c.category_name 
@@ -100,7 +105,7 @@ checkSession();
 
                 // we will use these links in the next part of this post
                 echo "<a href='product_update.php?id={$id}' class='btn btn-primary me-3'>Edit</a>";
-                echo "<a href='product_delete.php?id={$id}' onclick='delete_product({$id});'  class='btn btn-danger'>Delete</a>";
+                echo "<a href='#' onclick='product_delete({$id});'  class='btn btn-danger'>Delete</a>";
                 echo "</td>";
                 echo "</tr>";
             }
@@ -113,6 +118,17 @@ checkSession();
         ?>
 
     </div> <!-- end .container -->
+    <script type='text/javascript'>
+        // confirm record deletion
+        function product_delete(id) {
+
+            if (confirm('Are you sure?')) {
+                // if user clicked ok,
+                // pass the id to delete.php and execute the delete query
+                window.location = 'product_delete.php?id=' + id;
+            }
+        }
+    </script>
 
     <!-- confirm delete record will be here -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>

@@ -75,15 +75,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 
 <body>
-    <?php
-    if (isset($_SESSION['message'])) {
-        echo '<p style="color: red;">' . $_SESSION['message'] . '</p>';
-        unset($_SESSION['message']); // Clear the message after displaying it
-    }
-    ?>
+
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-6 col-lg-4 login-container">
+                <?php
+                if (isset($_SESSION['message'])) {
+                    echo '<div class = "alert alert-danger text-center">' . $_SESSION['message'] . '</div>';
+                    unset($_SESSION['message']); // Clear the message after displaying it
+                }
+                ?>
                 <div class="login-header">
                     <h2>Welcome to Product Management System</h2>
                 </div>
