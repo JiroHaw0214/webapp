@@ -21,6 +21,12 @@ checkSession();
         <?php
         // Include the necessary database connection file
         include 'config/database.php';
+        $action = isset($_GET['action']) ? $_GET['action'] : "";
+
+        // if it was redirected from delete.php
+        if ($action == 'deleted') {
+            echo "<div class='alert alert-success'>Record was deleted.</div>";
+        }
         try {
             // Select all categories from the database
             $query = "SELECT order_summary.id, customers.first_name, order_summary.order_date FROM order_summary INNER JOIN customers ON order_summary.customer_id = customers.id ORDER BY order_summary.order_date DESC";
@@ -59,6 +65,7 @@ checkSession();
                     echo "<a href='order_read_one.php?id={$id}' class='btn btn-info me-3'>Read</a>";
                     // we will use this links on next part of this post
                     echo "<a href='order_update.php?id={$id}' class='btn btn-primary me-3'>Edit</a>";
+                    echo "<a href='#' onclick='delete_order({$id});' class='btn btn-danger mx-2'>Delete</a>";
                     echo "</td>";
                     echo "</tr>";
                 }
@@ -73,6 +80,17 @@ checkSession();
         ?>
         <a href="create_order.php" class="btn btn-primary">Create Order</a>
     </div>
+    <script type='text/javascript'>
+        // confirm record deletion
+        function delete_order(id) {
+
+            if (confirm('Are you sure?')) {
+                // if user clicked ok,
+                // pass the id to delete.php and execute the delete query
+                window.location = 'order_delete.php?id=' + id;
+            }
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
