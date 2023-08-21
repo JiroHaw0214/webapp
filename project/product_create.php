@@ -33,8 +33,16 @@ checkSession();
                 $category_id = $_POST['category_id'];
                 $description = $_POST['description'];
                 $price = $_POST['price'];
+                $promotion_price = $_POST['promotion_price'];
+                $manufacture_date = $_POST['manufacture_date'];
+                $expired_date = $_POST['expired_date'];
 
-                // Check if an image file was uploaded
+                //Datetime objects
+                $dateStart = new DateTime($manufacture_date);
+                $dateEnd = new DateTime($expired_date);
+
+                $errorMessage = array();
+
                 if (!empty($_FILES["image"]["name"])) {
                     $image = sha1_file($_FILES['image']['tmp_name']) . "-" . basename($_FILES["image"]["name"]);
                     $target_directory = "uploads/";
@@ -50,12 +58,17 @@ checkSession();
 
                     // Check file size (less than 512 KB)
                     if ($_FILES['image']['size'] > 524288) {
-                        $errorMessage[] = "<div>Image must be less than 512 KB in size.</div>";
+                        $errorMessage[] = "Image must be less than 512 KB in size.";
                     }
 
                     // Check if the file already exists
                     if (file_exists($target_file)) {
-                        $errorMessage[] = "<div>Image already exists. Try to change the file name.</div>";
+                        $errorMessage[] = "Image already exists. Try to change the file name.";
+                    }
+
+                    list($width, $height) = getimagesize($_FILES['image']['tmp_name']);
+                    if ($width != $height) {
+                        $errorMessage[] = "Only square size images are allowed.";
                     }
 
                     if (empty($errorMessage)) {
@@ -63,38 +76,65 @@ checkSession();
                         if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
                             // File uploaded successfully
                         } else {
-                            $errorMessage[] = "<div>Unable to upload the image.</div>";
+                            $errorMessage[] = "Unable to upload the image.";
                         }
                     }
                 } else {
                     $image = ""; // No image was uploaded
                 }
+                if (empty($name)) {
+                    $errorMessage[] = "Name is required.";
+                }
+                if (empty($description)) {
+                    $errorMessage[] = "Description is required.";
+                }
+                if (empty($price)) {
+                    $errorMessage[] = "Price is required.";
+                } else if (!is_numeric($price)) {
+                    $errorMessage[] = "Prices must be a numeric value.";
+                }
+                if (!is_numeric($promotion_price)) {
+                    $errorMessage[] = "Promotion prices must be a numeric value.";
+                }
+                if (empty($manufacture_date)) {
+                    $errorMessage[] = "Manufacture date is required.";
+                }
+                if (empty($expired_date)) {
+                    $errorMessage[] = "Expired date is required.";
+                }
+                if ($promotion_price >= $price) {
+                    $errorMessage[] = "Promotion price must be cheaper than the original price.";
+                }
+                if ($expired_date <= $manufacture_date) {
+                    $errorMessage[] = "Expired date must be later than the manufacture date.";
+                }
 
-                $promotion_price = $_POST['promotion_price'];
-                $manufacture_date = $_POST['manufacture_date'];
-                $expired_date = $_POST['expired_date'];
 
-                //Datetime objects
-                $dateStart = new DateTime($manufacture_date);
-                $dateEnd = new DateTime($expired_date);
-
-                $created = date('Y-m-d H:i:s'); // get the current date and time
-
-                $stmt->bindParam(':name', $name);
-                $stmt->bindParam(':category_id', $category_id);
-                $stmt->bindParam(':description', $description);
-                $stmt->bindParam(':price', $price);
-                $stmt->bindParam(':promotion_price', $promotion_price);
-                $stmt->bindParam(':manufacture_date', $manufacture_date);
-                $stmt->bindParam(':expired_date', $expired_date);
-                $stmt->bindParam(":image", $image);
-                $stmt->bindParam(':created', $created);
-
-                // Execute the query
-                if ($stmt->execute()) {
-                    echo "<div class='alert alert-success m-3'>Record was saved.</div>";
+                if (!empty($errorMessage)) {
+                    echo "<div class='alert alert-danger m-3'>";
+                    foreach ($errorMessage as $displayErrorMessage) {
+                        echo $displayErrorMessage . "<br>";
+                    }
+                    echo "</div>";
                 } else {
-                    echo "<div class='alert alert-danger m-3'>Unable to save the record.</div>";
+                    // Bind the parameters
+                    $stmt->bindParam(':name', $name);
+                    $stmt->bindParam(':category_id', $category_id);
+                    $stmt->bindParam(':description', $description);
+                    $stmt->bindParam(':price', $price);
+                    $stmt->bindParam(':promotion_price', $promotion_price);
+                    $stmt->bindParam(':manufacture_date', $manufacture_date);
+                    $stmt->bindParam(':expired_date', $expired_date);
+                    $stmt->bindParam(":image", $image);
+                    $created = date('Y-m-d H:i:s'); // get the current date and time
+                    $stmt->bindParam(':created', $created);
+
+                    // Execute the query
+                    if ($stmt->execute()) {
+                        echo "<div class='alert alert-success m-3'>Record was saved.</div>";
+                    } else {
+                        echo "<div class='alert alert-danger m-3'>Unable to save the record.</div>";
+                    }
                 }
             }
             // show error
@@ -133,6 +173,8 @@ checkSession();
                                 foreach ($options as $id => $category_name) {
                                     echo "<option value='" . $id . "'>" . $category_name . "</option>";
                                 }
+
+
                                 ?>
                             </select>
                         </td>
