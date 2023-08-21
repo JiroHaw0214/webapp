@@ -13,6 +13,8 @@ checkSession();
 </head>
 
 <body>
+    <?php include 'includes/navbar.php'; ?>
+
     <div class="container">
         <?php
         // Include database connection and fetch customer data
@@ -27,6 +29,42 @@ checkSession();
             $gender = $_POST['gender'];
             $username = $_POST['username'];
             $date_of_birth = $_POST['date_of_birth'];
+            $image = $_FILES['image'];
+
+            // Check if a new image is uploaded
+            if (!empty($image["name"])) {
+                // Process the new image upload
+                $upload_dir = "uploads/";
+                $image_name = basename($image["name"]);
+                $target_path = $upload_dir . $image_name;
+
+                // Check file type and size
+                $imageFileType = strtolower(pathinfo($target_path, PATHINFO_EXTENSION));
+                $allowed_extensions = array("jpg", "jpeg", "png", "gif");
+                $max_file_size = 524288; // 512 KB
+
+                if (!in_array($imageFileType, $allowed_extensions)) {
+                    echo "<div class='alert alert-danger'>Only JPG, JPEG, PNG, and GIF files are allowed.</div>";
+                } elseif ($image["size"] > $max_file_size) {
+                    echo "<div class='alert alert-danger'>Image must be less than 512 KB in size.</div>";
+                } else {
+                    // Get the current image filename
+                    $current_image_query = "SELECT image FROM customers WHERE id=:customer_id";
+                    $current_image_stmt = $con->prepare($current_image_query);
+                    $current_image_stmt->bindParam(':customer_id', $customer_id);
+                    $current_image_stmt->execute();
+                    $current_image = $current_image_stmt->fetch(PDO::FETCH_ASSOC)['image'];
+
+                    // Delete the current image from the server
+                    if (!empty($current_image) && file_exists('uploads/' . $current_image)) {
+                        unlink('uploads/' . $current_image);
+                    }
+
+                    // Upload the new image
+                    move_uploaded_file($image["tmp_name"], "uploads/$image_name");
+                }
+            }
+
 
             // Validate password fields
             if (empty($_POST['old_password']) || empty($_POST['new_password']) || empty($_POST['confirm_password'])) {
@@ -78,7 +116,7 @@ checkSession();
             }
 
             // Update customer details
-            $update_query = "UPDATE customers SET first_name=:first_name, last_name=:last_name, email=:email, gender=:gender, username=:username, date_of_birth=:date_of_birth WHERE id=:customer_id";
+            $update_query = "UPDATE customers SET first_name=:first_name, last_name=:last_name, email=:email, gender=:gender, username=:username, image=:image, date_of_birth=:date_of_birth WHERE id=:customer_id";
             $update_stmt = $con->prepare($update_query);
             $update_stmt->bindParam(':first_name', $first_name);
             $update_stmt->bindParam(':last_name', $last_name);
@@ -86,6 +124,7 @@ checkSession();
             $update_stmt->bindParam(':gender', $gender);
             $update_stmt->bindParam(':username', $username);
             $update_stmt->bindParam(':date_of_birth', $date_of_birth);
+            $update_stmt->bindParam(':image', $image_name);
             $update_stmt->bindParam(':customer_id', $customer_id);
 
             if ($update_stmt->execute()) {
@@ -108,7 +147,7 @@ checkSession();
             <h1>Edit Customer Details</h1>
         </div>
 
-        <form action="" method="POST">
+        <form action="" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="customer_id" value="<?php echo $customer['id']; ?>">
 
             <div class="mb-3">
@@ -145,7 +184,24 @@ checkSession();
                 <label for="date_of_birth" class="form-label">Date of Birth</label>
                 <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" value="<?php echo $customer['date_of_birth']; ?>" required>
             </div>
+            <!-- Existing Image -->
+            <div class="mb-3">
+                <label for="current_image" class="form-label"></label>
+                <?php
+                if (!empty($customer['image']) && file_exists('uploads/' . $customer['image'])) {
+                    echo "<img src='uploads/{$customer['image']}' class='img-thumbnail' alt='Customer Image'><br>";
+                    echo "<input type='checkbox' name='delete_image' value='1'> Delete Current Image";
+                } else {
+                    echo '<img src="img/customer.jpg" height="100px" alt="">'; // 移除多余的</td>
+                }
+                ?>
+            </div>
 
+            <!-- Upload New Image -->
+            <div class="mb-3">
+                <label for="image" class="form-label">Upload New Image</label>
+                <input type="file" class="form-control" id="image" name="image">
+            </div>
             <hr>
 
             <div class="mb-3">

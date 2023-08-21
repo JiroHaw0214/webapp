@@ -32,7 +32,45 @@ checkSession();
             include 'config/database.php';
 
             $errors = array(); // Array to store error messages
+            if (!empty($_FILES["image"]["name"])) {
+                $image = sha1_file($_FILES['image']['tmp_name']) . "-" . basename($_FILES["image"]["name"]);
+                $target_directory = "uploads/";
+                $target_file = $target_directory . $image;
+                $file_type = pathinfo($target_file, PATHINFO_EXTENSION);
 
+                $allowed_file_types = array("jpg", "jpeg", "png", "gif");
+
+                // Check file type
+                if (!in_array($file_type, $allowed_file_types)) {
+                    $errors[] = "<div>Only JPG, JPEG, PNG, GIF files are allowed.</div>";
+                }
+
+                // Check file size (less than 512 KB)
+                if ($_FILES['image']['size'] > 524288) {
+                    $errors[] = "Image must be less than 512 KB in size.";
+                }
+
+                // Check if the file already exists
+                if (file_exists($target_file)) {
+                    $errors[] = "Image already exists. Try to change the file name.";
+                }
+
+                list($width, $height) = getimagesize($_FILES['image']['tmp_name']);
+                if ($width != $height) {
+                    $errors[] = "Only square size images are allowed.";
+                }
+
+                if (empty($errors)) {
+                    // Try to move the uploaded file to the target directory
+                    if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
+                        // File uploaded successfully
+                    } else {
+                        $errors[] = "Unable to upload the image.";
+                    }
+                }
+            } else {
+                $image = ""; // No image was uploaded
+            }
             // Check each field for empty values and store error messages in the $errors array
             if (empty($_POST['username'])) {
                 $errors[] = "Username is required.";
@@ -95,7 +133,7 @@ checkSession();
                     // Hash the password
                     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
                     // Insert form data into the database
-                    $query = "INSERT INTO customers SET username=:username, password=:password, first_name=:first_name, last_name=:last_name, gender=:gender, date_of_birth=:date_of_birth, email=:email, registration_datetime=:registration_datetime, account_status=:account_status";
+                    $query = "INSERT INTO customers SET username=:username, password=:password, first_name=:first_name, last_name=:last_name, gender=:gender, date_of_birth=:date_of_birth, email=:email, registration_datetime=:registration_datetime, image=:image, account_status=:account_status";
                     // Bind the parameters
                     $stmt = $con->prepare($query);
                     $stmt->bindParam(':username', $username);
@@ -108,6 +146,7 @@ checkSession();
                     $registration_datetime = date('Y-m-d H:i:s');
                     $stmt->bindParam(':registration_datetime', $registration_datetime);
                     $account_status = "Active";
+                    $stmt->bindParam(':image', $image);
                     $stmt->bindParam(':account_status', $account_status);
 
                     // Execute the query
@@ -115,7 +154,7 @@ checkSession();
                         echo "<div class='alert alert-success'>Customer record was saved.</div>";
 
                         // Reset form fields
-                        $username = $password = $confirm_password = $first_name = $last_name = $email = $gender = $date_of_birth = '';
+                        $username = $password = $confirm_password = $first_name = $last_name = $email = $gender = $date_of_birth = $image = '';
                     } else {
                         echo "<div class='alert alert-danger'>Unable to save customer record.</div>";
                     }
@@ -130,12 +169,16 @@ checkSession();
         }
         ?>
 
-        <form action="<?php echo $_SERVER["PHP_SELF"]; ?>" method="POST">
+        <form action="<?php echo $_SERVER["PHP_SELF"]; ?>" method="POST" enctype="multipart/form-data">
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label for="username" class="form-label">Username</label>
                         <input type="text" name="username" class="form-control" id="username" value="<?php echo $username; ?>">
+                    </div>
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Profile Image (Optional)</label>
+                        <input type="file" name="image" class="form-control" id="image">
                     </div>
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>

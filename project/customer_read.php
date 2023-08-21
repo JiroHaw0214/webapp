@@ -37,7 +37,7 @@ checkSession();
             echo "<div class='alert alert-success'>Record was deleted.</div>";
         }
         $searchKeyword = isset($_GET['search']) ? $_GET['search'] : '';
-        $query = "SELECT id, username, first_name, last_name, email FROM customers";
+        $query = "SELECT id, username, first_name, last_name, email, image FROM customers";
         if (!empty($searchKeyword)) {
             $query .= " WHERE username LIKE :keyword OR first_name LIKE :keyword OR last_name LIKE :keyword OR email LIKE :keyword";
             $searchKeyword = "%{$searchKeyword}%";
@@ -72,6 +72,7 @@ checkSession();
             echo "<th>First Name</th>";
             echo "<th>Last Name</th>";
             echo "<th>Email</th>";
+            echo "<th>Image</th>";
             echo "<th>Action</th>";
             echo "</tr>";
 
@@ -88,6 +89,13 @@ checkSession();
                 echo "<td>{$first_name}</td>";
                 echo "<td>{$last_name}</td>";
                 echo "<td>{$email}</td>";
+                echo "<td>"; 
+                if (!empty($image)) {
+                    echo "<img src='uploads/{$image}' width='100' height='100' />";
+                } else {
+                    echo '<img src="img/customer.jpg" height="100px" alt="">'; // 移除多余的</td>
+                }
+                echo "</td>"; 
                 echo "<td>";
                 // read one record
                 echo "<a href='customer_read_one.php?id={$id}' class='btn btn-info me-3'>Read</a>";

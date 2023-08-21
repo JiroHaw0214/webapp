@@ -30,7 +30,7 @@ checkSession();
         // Read the current customer's data
         try {
             // Prepare the select query
-            $query = "SELECT id, username, first_name, last_name, email, gender, date_of_birth FROM customers WHERE id = :id";
+            $query = "SELECT id, username, first_name, last_name, email, gender, date_of_birth, image FROM customers WHERE id = :id";
             $stmt = $con->prepare($query);
 
             // Bind the parameter
@@ -49,6 +49,7 @@ checkSession();
             $email = $row['email'];
             $gender = $row['gender'];
             $date_of_birth = $row['date_of_birth'];
+            $image = $row['image']; // Add this line to retrieve the image filename
         }
 
         // Show error
@@ -82,6 +83,19 @@ checkSession();
             <tr>
                 <td>Date of Birth</td>
                 <td><?php echo htmlspecialchars($date_of_birth, ENT_QUOTES); ?></td>
+            </tr>
+            <!-- Add a row to display the image -->
+            <tr>
+                <td>Image</td>
+                <td>
+                    <?php
+                    if (!empty($image)) {
+                        echo "<img src='uploads/{$image}' width='100' height='100' />";
+                    } else {
+                        echo '<img src="img/customer.jpg" height="100px" alt="">';
+                    }
+                    ?>
+                </td>
             </tr>
             <tr>
                 <td></td>

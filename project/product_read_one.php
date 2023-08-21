@@ -81,7 +81,7 @@ checkSession();
                     if (!empty($image)) {
                         echo "<img src='uploads/{$image}' class='img-fluid' alt='Product Image'>";
                     } else {
-                        echo "No image available";
+                        echo '<img src="img/product.jpg" height="100px" alt="">';
                     }
                     ?>
                 </td>
