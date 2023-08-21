@@ -26,6 +26,10 @@ checkSession();
         .mt0 {
             margin-top: 0;
         }
+
+        .product-image {
+            max-width: 300px;
+        }
     </style>
 </head>
 
@@ -46,7 +50,7 @@ checkSession();
         // Read current record's data
         try {
             // Prepare select query
-            $query = "SELECT id, name, description, price, category_id, promotion_price, manufacture_date, expired_date FROM products WHERE id = ? LIMIT 0,1";
+            $query = "SELECT id, name, description, price, category_id, promotion_price, manufacture_date, expired_date, image FROM products WHERE id = ? LIMIT 0,1";
             $stmt = $con->prepare($query);
             // This is the first question mark
             $stmt->bindParam(1, $id);
@@ -62,6 +66,7 @@ checkSession();
             $promotion_price = $row['promotion_price'];
             $manufacture_date = $row['manufacture_date'];
             $expired_date = $row['expired_date'];
+            $image = $row['image']; // Retrieve the image filename
         }
         // Show error
         catch (PDOException $exception) {
@@ -87,7 +92,7 @@ checkSession();
                 if (!is_numeric($price) || !is_numeric($promotion_price)) {
                     echo "<div class='alert alert-danger'>Price and Promotion Price must be valid numbers.</div>";
                 } else if ($price <= 0 || $promotion_price <= 0) {
-                    echo "<div class='alert alert-danger'>Price and Promotion Price must be large then 0.</div>";
+                    echo "<div class='alert alert-danger'>Price and Promotion Price must be greater than 0.</div>";
                 } else {
                     // Convert values to float for comparison
                     $price = (float) $price;
@@ -95,15 +100,54 @@ checkSession();
 
                     // Check if promotion price is less than price
                     if ($promotion_price > $price) {
-                        echo "<div class='alert alert-danger'>Promotion Price cannot large than Price.</div>";
+                        echo "<div class='alert alert-danger'>Promotion Price cannot be greater than Price.</div>";
                     } else {
-                        // Write update query
+                        // Check if the user wants to delete the original image
+                        if (isset($_POST['delete_image'])) {
+                            // Delete the image file from the server
+                            if (!empty($image) && file_exists("uploads/{$image}")) {
+                                unlink("uploads/{$image}");
+                            }
+                            // Set the image field in the database to NULL
+                            $image = null;
+                        }
+
+                        // Check if a new image is uploaded
+                        if (!empty($_FILES["new_image"]["name"])) {
+                            // Process the new image upload
+                            $new_image = $_FILES["new_image"];
+                            $upload_dir = "uploads/";
+                            $image_name = basename($new_image["name"]);
+                            $target_path = $upload_dir . $image_name;
+
+                            // Check file type and size
+                            $imageFileType = strtolower(pathinfo($target_path, PATHINFO_EXTENSION));
+                            $allowed_extensions = array("jpg", "jpeg", "png", "gif");
+                            $max_file_size = 524288; // 512 KB
+
+                            if (!in_array($imageFileType, $allowed_extensions)) {
+                                echo "<div class='alert alert-danger'>Only JPG, JPEG, PNG, and GIF files are allowed.</div>";
+                            } elseif ($new_image["size"] > $max_file_size) {
+                                echo "<div class='alert alert-danger'>Image must be less than 512 KB in size.</div>";
+                            } else {
+                                // Move the uploaded image to the target directory
+                                if (move_uploaded_file($new_image["tmp_name"], $target_path)) {
+                                    $image = $image_name;
+                                } else {
+                                    echo "<div class='alert alert-danger'>Failed to upload the new image.</div>";
+                                }
+                            }
+                        }
+
+                        // Write the update query
                         $query = "UPDATE products
-                    SET name=:name, description=:description,
-                    price=:price, category_id=:category_id, promotion_price=:promotion_price, manufacture_date=:manufacture_date, expired_date=:expired_date
-                    WHERE id = :id";
+                            SET name=:name, description=:description,
+                            price=:price, category_id=:category_id, promotion_price=:promotion_price, manufacture_date=:manufacture_date, expired_date=:expired_date, image=:image
+                            WHERE id = :id";
+
                         // Prepare query for execution
                         $stmt = $con->prepare($query);
+
                         // Bind the parameters
                         $stmt->bindParam(':name', $name);
                         $stmt->bindParam(':description', $description);
@@ -112,7 +156,10 @@ checkSession();
                         $stmt->bindParam(':promotion_price', $promotion_price);
                         $stmt->bindParam(':manufacture_date', $manufacture_date);
                         $stmt->bindParam(':expired_date', $expired_date);
+                        $stmt->bindParam(':image', $image); // Bind the image filename
+
                         $stmt->bindParam(':id', $id);
+
                         // Execute the query
                         if ($stmt->execute()) {
                             echo "<div class='alert alert-success'>Record was updated.</div>";
@@ -129,7 +176,7 @@ checkSession();
         }
         ?>
         <!-- We have our HTML form here where new record information can be updated -->
-        <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"] . "?id={$id}"); ?>" method="post">
+        <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"] . "?id={$id}"); ?>" method="post" enctype="multipart/form-data">
             <table class='table table-hover table-responsive table-bordered'>
                 <tr>
                     <td>Name</td>
@@ -154,10 +201,27 @@ checkSession();
                 <tr>
                     <td>Manufacture Date</td>
                     <td><input type='date' name='manufacture_date' value="<?php echo htmlspecialchars($manufacture_date, ENT_QUOTES); ?>" class='form-control' /></td>
-                </tr>
+                </tr>f
                 <tr>
                     <td>Expired Date</td>
                     <td><input type='date' name='expired_date' value="<?php echo htmlspecialchars($expired_date, ENT_QUOTES); ?>" class='form-control' /></td>
+                </tr>
+                <tr>
+                    <td>Current Image</td>
+                    <td>
+                        <?php
+                        if (!empty($image)) {
+                            echo "<img src='uploads/{$image}' class='product-image' alt='Product Image'>";
+                            echo "<br><input type='checkbox' name='delete_image' value='1'> Delete Current Image";
+                        } else {
+                            echo "No image available";
+                        }
+                        ?>
+                    </td>
+                </tr>
+                <tr>
+                    <td>New Image</td>
+                    <td><input type='file' name='new_image' accept='image/*' class='form-control' /></td>
                 </tr>
                 <tr>
                     <td></td>

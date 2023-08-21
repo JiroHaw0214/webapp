@@ -34,7 +34,7 @@ checkSession();
         // read current record's data
         try {
             // prepare select query
-            $query = "SELECT id, name, description, price FROM products WHERE id = :id ";
+            $query = "SELECT id, name, description, price, image FROM products WHERE id = :id ";
             $stmt = $con->prepare($query);
 
             // Bind the parameter
@@ -50,7 +50,7 @@ checkSession();
             $name = $row['name'];
             $description = $row['description'];
             $price = $row['price'];
-            // shorter way to do that is extract($row)
+            $image = $row['image']; // Retrieve the image filename
         }
 
         // show error
@@ -59,10 +59,8 @@ checkSession();
         }
         ?>
 
-
-
         <!-- HTML read one record table will be here -->
-        <!--we have our html table here where the record will be displayed-->
+        <!-- we have our html table here where the record will be displayed -->
         <table class='table table-hover table-responsive table-bordered'>
             <tr>
                 <td>Name</td>
@@ -75,6 +73,18 @@ checkSession();
             <tr>
                 <td>Price</td>
                 <td><?php echo htmlspecialchars($price, ENT_QUOTES);  ?></td>
+            </tr>
+            <tr>
+                <td>Image</td>
+                <td>
+                    <?php
+                    if (!empty($image)) {
+                        echo "<img src='uploads/{$image}' class='img-fluid' alt='Product Image'>";
+                    } else {
+                        echo "No image available";
+                    }
+                    ?>
+                </td>
             </tr>
             <tr>
                 <td></td>

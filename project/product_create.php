@@ -26,13 +26,50 @@ checkSession();
             include 'config/database.php';
             try {
                 // insert query
-                $query = "INSERT INTO products SET name=:name, category_id=:category_id, description=:description, price=:price, promotion_price=:promotion_price, manufacture_date=:manufacture_date, expired_date=:expired_date, created=:created";
+                $query = "INSERT INTO products SET name=:name, category_id=:category_id, description=:description, price=:price, promotion_price=:promotion_price, manufacture_date=:manufacture_date, expired_date=:expired_date, image=:image, created=:created";
                 // prepare query for execution
                 $stmt = $con->prepare($query);
                 $name = $_POST['name'];
                 $category_id = $_POST['category_id'];
                 $description = $_POST['description'];
                 $price = $_POST['price'];
+
+                // Check if an image file was uploaded
+                if (!empty($_FILES["image"]["name"])) {
+                    $image = sha1_file($_FILES['image']['tmp_name']) . "-" . basename($_FILES["image"]["name"]);
+                    $target_directory = "uploads/";
+                    $target_file = $target_directory . $image;
+                    $file_type = pathinfo($target_file, PATHINFO_EXTENSION);
+
+                    $allowed_file_types = array("jpg", "jpeg", "png", "gif");
+
+                    // Check file type
+                    if (!in_array($file_type, $allowed_file_types)) {
+                        $errorMessage[] = "<div>Only JPG, JPEG, PNG, GIF files are allowed.</div>";
+                    }
+
+                    // Check file size (less than 512 KB)
+                    if ($_FILES['image']['size'] > 524288) {
+                        $errorMessage[] = "<div>Image must be less than 512 KB in size.</div>";
+                    }
+
+                    // Check if the file already exists
+                    if (file_exists($target_file)) {
+                        $errorMessage[] = "<div>Image already exists. Try to change the file name.</div>";
+                    }
+
+                    if (empty($errorMessage)) {
+                        // Try to move the uploaded file to the target directory
+                        if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
+                            // File uploaded successfully
+                        } else {
+                            $errorMessage[] = "<div>Unable to upload the image.</div>";
+                        }
+                    }
+                } else {
+                    $image = ""; // No image was uploaded
+                }
+
                 $promotion_price = $_POST['promotion_price'];
                 $manufacture_date = $_POST['manufacture_date'];
                 $expired_date = $_POST['expired_date'];
@@ -41,61 +78,23 @@ checkSession();
                 $dateStart = new DateTime($manufacture_date);
                 $dateEnd = new DateTime($expired_date);
 
-                $errorMessage = array();
+                $created = date('Y-m-d H:i:s'); // get the current date and time
 
-                if (empty($name)) {
-                    $errorMessage[] = "Name is required.";
-                }
-                if (empty($description)) {
-                    $errorMessage[] = "Description is required.";
-                }
-                if (empty($price)) {
-                    $errorMessage[] = "Price is required.";
-                } else if (!is_numeric($price)) {
-                    $errorMessage[] = "Prices must be a numeric value.";
-                }
-                if (!is_numeric($promotion_price)) {
-                    $errorMessage[] = "Promotion prices must be a numeric value.";
-                }
-                if (empty($manufacture_date)) {
-                    $errorMessage[] = "Manufacture date is required.";
-                }
-                if (empty($expired_date)) {
-                    $errorMessage[] = "Expired date is required.";
-                }
-                if ($promotion_price >= $price) {
-                    $errorMessage[] = "Promotion price must be cheaper than the original price.";
-                }
-                if ($expired_date <= $manufacture_date) {
-                    $errorMessage[] = "Expired date must be later than the manufacture date.";
-                }
+                $stmt->bindParam(':name', $name);
+                $stmt->bindParam(':category_id', $category_id);
+                $stmt->bindParam(':description', $description);
+                $stmt->bindParam(':price', $price);
+                $stmt->bindParam(':promotion_price', $promotion_price);
+                $stmt->bindParam(':manufacture_date', $manufacture_date);
+                $stmt->bindParam(':expired_date', $expired_date);
+                $stmt->bindParam(":image", $image);
+                $stmt->bindParam(':created', $created);
 
-
-                if (!empty($errorMessage)) {
-                    echo "<div class='alert alert-danger m-3'>";
-                    foreach ($errorMessage as $displayErrorMessage) {
-                        echo $displayErrorMessage . "<br>";
-                    }
-                    echo "</div>";
+                // Execute the query
+                if ($stmt->execute()) {
+                    echo "<div class='alert alert-success m-3'>Record was saved.</div>";
                 } else {
-                    // Bind the parameters
-                    $stmt->bindParam(':name', $name);
-                    $stmt->bindParam(':category_id', $category_id);
-                    $stmt->bindParam(':description', $description);
-                    $stmt->bindParam(':price', $price);
-                    $stmt->bindParam(':promotion_price', $promotion_price);
-                    $stmt->bindParam(':manufacture_date', $manufacture_date);
-                    $stmt->bindParam(':expired_date', $expired_date);
-                    $created = date('Y-m-d H:i:s'); // get the current date and time
-                    $stmt->bindParam(':created', $created);
-
-                    // Execute the query
-                    if ($stmt->execute()) {
-                        echo "<div class='alert alert-success m-3'>Record was saved.</div>";
-                        $_POST = array();
-                    } else {
-                        echo "<div class='alert alert-danger m-3'>Unable to save the record.</div>";
-                    }
+                    echo "<div class='alert alert-danger m-3'>Unable to save the record.</div>";
                 }
             }
             // show error
@@ -107,7 +106,7 @@ checkSession();
 
         <div class="p-3">
             <!-- html form here where the product information will be entered -->
-            <form action="<?php echo $_SERVER["PHP_SELF"]; ?>" method="POST">
+            <form action="<?php echo $_SERVER["PHP_SELF"]; ?>" method="POST" enctype="multipart/form-data">
                 <table class='table table-hover table-responsive table-bordered'>
                     <tr>
                         <td>Name</td>
@@ -134,8 +133,6 @@ checkSession();
                                 foreach ($options as $id => $category_name) {
                                     echo "<option value='" . $id . "'>" . $category_name . "</option>";
                                 }
-
-
                                 ?>
                             </select>
                         </td>
@@ -159,6 +156,10 @@ checkSession();
                     <tr>
                         <td>Expired Date</td>
                         <td><input type='date' name='expired_date' class='form-control' value="<?php echo isset($_POST['expired_date']) ? $_POST['expired_date'] : ''; ?>" /></td>
+                    </tr>
+                    <tr>
+                        <td>Photo</td>
+                        <td><input type="file" name="image" class="form-control" accept="image/*"></td>
                     </tr>
                     <tr>
                         <td></td>

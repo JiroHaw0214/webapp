@@ -37,7 +37,7 @@ checkSession();
         }
         // delete message prompt will be here
         $searchKeyword = isset($_GET['search']) ? $_GET['search'] : '';
-        $query = "SELECT p.id, p.name, p.description, p.price, p.promotion_price, c.category_name 
+        $query = "SELECT p.id, p.name, p.description, p.price, p.promotion_price, p.image, c.category_name 
                   FROM products p 
                   LEFT JOIN category c ON p.category_id = c.id";
         //   set p as alias for products table and c for category table
@@ -72,7 +72,8 @@ checkSession();
             echo "<th>Name</th>";
             echo "<th>Description</th>";
             echo "<th>Price</th>";
-            echo "<th>Category</th>"; // New column for Category
+            echo "<th>Category</th>";
+            echo "<th>Image</th>";
             echo "<th>Action</th>";
             echo "</tr>";
 
@@ -99,6 +100,11 @@ checkSession();
                 }
                 echo "</td>";
                 echo "<td>{$category_name}</td>"; // Display category name
+                if ($image == "") {
+                    echo '<td><img src="img/product.jpg" height="100px" alt=""></td>';
+                } else {
+                    echo "<td><img src='uploads/{$image}' class='img-fluid' alt='Product Image'></td>";
+                }
                 echo "<td>";
                 // read one record
                 echo "<a href='product_read_one.php?id={$id}' class='btn btn-info me-3'>Read</a>";
