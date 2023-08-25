@@ -31,10 +31,36 @@ checkSession();
         include 'config/database.php';
         $action = isset($_GET['action']) ? $_GET['action'] : "";
 
-        // if it was redirected from delete.php
         if ($action == 'deleted') {
             echo "<div class='alert alert-success'>Record was deleted.</div>";
         }
+        if ($action == "fail") {
+            if (isset($_SESSION['orderIds']) && is_array($_SESSION['orderIds'])) {
+                $orderIds = $_SESSION['orderIds'];
+        ?>
+                <div class="alert alert-warning">
+                    <strong>Warning:</strong> This product is ordered by the following orders:
+                    <ul>
+                        <?php foreach ($orderIds as $orderId) { ?>
+                            <li>Order ID: <?php echo $orderId; ?></li>
+                        <?php } ?>
+                    </ul>
+                    You cannot delete this product until it is removed from these orders.
+                </div>
+            <?php
+            } else {
+            ?>
+                <div class="alert alert-danger">
+                    <strong>Error:</strong> An error occurred.
+                </div>
+        <?php
+            }
+        }
+
+
+        // 清除已使用的session变量
+        unset($_SESSION['orderIds']);
+
         // delete message prompt will be here
         $searchKeyword = isset($_GET['search']) ? $_GET['search'] : '';
         $query = "SELECT p.id, p.name, p.description, p.price, p.promotion_price, p.image, c.category_name 
@@ -90,14 +116,16 @@ checkSession();
                 echo "<td>{$description}</td>";
 
                 echo "<td class='text-end'>";
-                if (!empty($promotion_price)) {
-                    // Display promotion price if available
+
+                if (!empty($promotion_price) && $promotion_price > 0) {
+                    // Display promotion price if available and greater than 0
                     echo "<div class='text-decoration-line-through'>" . number_format($price, 2) . "</div>";
                     echo number_format($promotion_price, 2);
                 } else {
                     // Display regular price
                     echo number_format($price, 2);
                 }
+
                 echo "</td>";
                 echo "<td>{$category_name}</td>"; // Display category name
                 if ($image == "") {

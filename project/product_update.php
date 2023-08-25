@@ -2,6 +2,7 @@
 require_once 'session_check.php';
 checkSession();
 ?>
+
 <!DOCTYPE HTML>
 <html>
 
@@ -41,25 +42,17 @@ checkSession();
         <div class="p-3">
             <h1>Update Product</h1>
         </div>
-        <!-- PHP read record by ID will be here -->
         <?php
-        // Get passed parameter value, in this case, the record ID
-        // isset() is a PHP function used to verify if a value is there or not
         $id = isset($_GET['id']) ? $_GET['id'] : die('ERROR: Record ID not found.');
-        // Include database connection
+
         include 'config/database.php';
-        // Read current record's data
+
         try {
-            // Prepare select query
             $query = "SELECT id, name, description, price, category_id, promotion_price, manufacture_date, expired_date, image FROM products WHERE id = ? LIMIT 0,1";
             $stmt = $con->prepare($query);
-            // This is the first question mark
             $stmt->bindParam(1, $id);
-            // Execute our query
             $stmt->execute();
-            // Store retrieved row to a variable
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            // Values to fill up our form
             $name = $row['name'];
             $description = $row['description'];
             $price = $row['price'];
@@ -67,20 +60,17 @@ checkSession();
             $promotion_price = $row['promotion_price'];
             $manufacture_date = $row['manufacture_date'];
             $expired_date = $row['expired_date'];
-            $image = $row['image']; // Retrieve the image filename
-        }
-        // Show error
-        catch (PDOException $exception) {
+            $image = $row['image'];
+            $price = number_format($price, 2);
+            $promotion_price = ($promotion_price != null && $promotion_price != 0) ? number_format($promotion_price, 2) : '';
+        } catch (PDOException $exception) {
             die('ERROR: ' . $exception->getMessage());
         }
         ?>
-        <!-- HTML form to update record will be here -->
-        <!-- PHP post to update record will be here -->
+
         <?php
-        // Check if form was submitted
         if ($_POST) {
             try {
-                // Posted values
                 $name = htmlspecialchars(strip_tags($_POST['name']));
                 $description = htmlspecialchars(strip_tags($_POST['description']));
                 $price = htmlspecialchars(strip_tags($_POST['price']));
@@ -89,114 +79,154 @@ checkSession();
                 $manufacture_date = htmlspecialchars(strip_tags($_POST['manufacture_date']));
                 $expired_date = htmlspecialchars(strip_tags($_POST['expired_date']));
 
-                // Check if price and promotion price are valid numbers
-                if (!is_numeric($price) || !is_numeric($promotion_price)) {
-                    echo "<div class='alert alert-danger'>Price and Promotion Price must be valid numbers.</div>";
-                } else if ($price <= 0 || $promotion_price <= 0) {
-                    echo "<div class='alert alert-danger'>Price and Promotion Price must be greater than 0.</div>";
-                } else {
-                    // Convert values to float for comparison
+                $errors = [];
+
+                if (empty($description)) {
+                    $errors[] = "Description cannot be empty.";
+                }
+
+                if (empty($manufacture_date)) {
+                    $errors[] = "Manufacture Date cannot be empty.";
+                } else if (empty($expired_date)) {
+                    $expired_date = null;
+                } else if (!empty($expired_date) && strtotime($expired_date) < strtotime($manufacture_date)) {
+                    $errors[] = "Expired Date cannot be earlier than Manufacture Date.";
+                }
+
+                if (empty($promotion_price) || $promotion_price === '0') {
+                    $promotion_price = null;
+                }
+
+                if (!empty($promotion_price) && !is_numeric($promotion_price)) {
+                    $errors[] = "Promotion price must be numbers.";
+                }
+
+                if (empty($price) || !is_numeric($price) || $price <= 0) {
+                    $errors[] = "Price must be a number greater than 0.";
+                }
+
+                if (empty($errors)) {
                     $price = (float) $price;
                     $promotion_price = (float) $promotion_price;
 
-                    // Check if promotion price is less than price
                     if ($promotion_price > $price) {
-                        echo "<div class='alert alert-danger'>Promotion Price cannot be greater than Price.</div>";
+                        $errors[] = "Promotion Price cannot be greater than Price.";
                     } else {
-                        // Check if the user wants to delete the original image
+                        // Check if the delete_image checkbox is checked
                         if (isset($_POST['delete_image'])) {
-                            // Delete the image file from the server
                             if (!empty($image) && file_exists("uploads/{$image}")) {
                                 unlink("uploads/{$image}");
+                                $image = null;
                             }
-                            // Set the image field in the database to NULL
-                            $image = null;
                         }
 
-                        // Check if a new image is uploaded
                         if (!empty($_FILES["new_image"]["name"])) {
-                            // Process the new image upload
                             $new_image = $_FILES["new_image"];
                             $upload_dir = "uploads/";
-                            $image_name = basename($new_image["name"]);
-                            $target_path = $upload_dir . $image_name;
-
-                            // Check file type and size
-                            $imageFileType = strtolower(pathinfo($target_path, PATHINFO_EXTENSION));
-                            $allowed_extensions = array("jpg", "jpeg", "png", "gif");
+                            $original_image_name = basename($new_image["name"]);
+                            $imageFileType = strtolower(pathinfo($original_image_name, PATHINFO_EXTENSION));
                             $max_file_size = 524288; // 512 KB
 
-                            if (!in_array($imageFileType, $allowed_extensions)) {
-                                echo "<div class='alert alert-danger'>Only JPG, JPEG, PNG, and GIF files are allowed.</div>";
-                            } elseif ($new_image["size"] > $max_file_size) {
-                                echo "<div class='alert alert-danger'>Image must be less than 512 KB in size.</div>";
+                            // Check if file name already exists
+                            $new_image_name = sha1_file($new_image["tmp_name"]) . "-" . $original_image_name;
+                            $target_path = $upload_dir . $new_image_name;
+
+                            if (file_exists($target_path)) {
+                                $errors[] = "Image already exists. Try to change the file name.";
                             } else {
-                                // Move the uploaded image to the target directory
-                                if (move_uploaded_file($new_image["tmp_name"], $target_path)) {
-                                    $image = $image_name;
+                                // Check file type and size
+                                $allowed_extensions = array("jpg", "jpeg", "png", "gif");
+                                if (!in_array($imageFileType, $allowed_extensions)) {
+                                    $errors[] = "Only JPG, JPEG, PNG, and GIF files are allowed.";
+                                } elseif ($new_image["size"] > $max_file_size) {
+                                    $errors[] = "Image must be less than 512 KB in size.";
                                 } else {
-                                    echo "<div class='alert alert-danger'>Failed to upload the new image.</div>";
+                                    // Check if the image is square
+                                    list($width, $height) = getimagesize($new_image["tmp_name"]);
+                                    if ($width != $height) {
+                                        $errors[] = "Image must be a square (same width and height).";
+                                    } else {
+                                        // Move the uploaded image to the target directory
+                                        if (move_uploaded_file($new_image["tmp_name"], $target_path)) {
+                                            $image = $new_image_name;
+                                        } else {
+                                            $errors[] = "Failed to upload the new image.";
+                                        }
+                                    }
                                 }
                             }
                         }
 
-                        // Write the update query
-                        $query = "UPDATE products
-                            SET name=:name, description=:description,
-                            price=:price, category_id=:category_id, promotion_price=:promotion_price, manufacture_date=:manufacture_date, expired_date=:expired_date, image=:image
-                            WHERE id = :id";
+                        if (empty($errors)) {
+                            $query = "UPDATE products
+                                SET name=:name, description=:description,
+                                price=:price, category_id=:category_id, promotion_price=:promotion_price, manufacture_date=:manufacture_date, expired_date=:expired_date, image=:image
+                                WHERE id = :id";
 
-                        // Prepare query for execution
-                        $stmt = $con->prepare($query);
+                            $stmt = $con->prepare($query);
 
-                        // Bind the parameters
-                        $stmt->bindParam(':name', $name);
-                        $stmt->bindParam(':description', $description);
-                        $stmt->bindParam(':price', $price);
-                        $stmt->bindParam(':category_id', $category);
-                        $stmt->bindParam(':promotion_price', $promotion_price);
-                        $stmt->bindParam(':manufacture_date', $manufacture_date);
-                        $stmt->bindParam(':expired_date', $expired_date);
-                        $stmt->bindParam(':image', $image); // Bind the image filename
+                            $stmt->bindParam(':name', $name);
+                            $stmt->bindParam(':description', $description);
+                            $stmt->bindParam(':price', $price);
+                            $stmt->bindParam(':category_id', $category);
+                            $stmt->bindParam(':promotion_price', $promotion_price);
+                            $stmt->bindParam(':manufacture_date', $manufacture_date);
+                            $stmt->bindParam(':expired_date', $expired_date);
+                            $stmt->bindParam(':image', $image);
+                            $stmt->bindParam(':id', $id);
 
-                        $stmt->bindParam(':id', $id);
-
-                        // Execute the query
-                        if ($stmt->execute()) {
-                            echo "<div class='alert alert-success'>Record was updated.</div>";
-                        } else {
-                            echo "<div class='alert alert-danger'>Unable to update record. Please try again.</div>";
+                            if ($stmt->execute()) {
+                                echo "<div class='alert alert-success'>Record was updated.</div>";
+                            } else {
+                                echo "<div class='alert alert-danger'>Unable to update record. Please try again.</div>";
+                            }
                         }
                     }
                 }
-            }
-            // Show errors
-            catch (PDOException $exception) {
+
+                if (!empty($errors)) {
+                    foreach ($errors as $error) {
+                        echo "<div class='alert alert-danger'>$error</div>";
+                    }
+                }
+            } catch (PDOException $exception) {
                 die('ERROR: ' . $exception->getMessage());
             }
         }
         ?>
-        <!-- We have our HTML form here where new record information can be updated -->
+
         <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"] . "?id={$id}"); ?>" method="post" enctype="multipart/form-data">
             <table class='table table-hover table-responsive table-bordered'>
                 <tr>
                     <td>Name</td>
-                    <td><input type='text' name='name' value="<?php echo htmlspecialchars($name, ENT_QUOTES); ?>" class='form-control' /></td>
+                    <td><input type='text' name='name' value="<?php echo htmlspecialchars($name, ENT_QUOTES); ?>" class='form-control' readonly /></td>
                 </tr>
                 <tr>
                     <td>Description</td>
                     <td><textarea name='description' class='form-control'><?php echo htmlspecialchars($description, ENT_QUOTES); ?></textarea></td>
                 </tr>
                 <tr>
-                    <td>Price</td>
+                    <td>Category</td>
+                    <td>
+                        <select name='category_id' class='form-select'>
+                            <?php
+                            $categoryQuery = "SELECT id, category_name FROM category";
+                            $categoryStmt = $con->prepare($categoryQuery);
+                            $categoryStmt->execute();
+                            while ($categoryRow = $categoryStmt->fetch(PDO::FETCH_ASSOC)) {
+                                $selected = ($category == $categoryRow['id']) ? 'selected' : '';
+                                echo "<option value='{$categoryRow['id']}' $selected>{$categoryRow['category_name']}</option>";
+                            }
+                            ?>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Price (RM)</td>
                     <td><input type='text' name='price' value="<?php echo htmlspecialchars($price, ENT_QUOTES); ?>" class='form-control' /></td>
                 </tr>
                 <tr>
-                    <td>Category</td>
-                    <td><input type='text' name='category_id' value="<?php echo htmlspecialchars($category, ENT_QUOTES); ?>" class='form-control' /></td>
-                </tr>
-                <tr>
-                    <td>Promotion Price</td>
+                    <td>Promotion Price (RM)</td>
                     <td><input type='text' name='promotion_price' value="<?php echo htmlspecialchars($promotion_price, ENT_QUOTES); ?>" class='form-control' /></td>
                 </tr>
                 <tr>

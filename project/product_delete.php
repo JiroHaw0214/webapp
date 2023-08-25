@@ -1,6 +1,8 @@
 <?php
 // Include database connection
 include 'config/database.php';
+session_start();
+
 
 try {
     // Get record ID
@@ -18,15 +20,8 @@ try {
         while ($row = $checkOrdersStmt->fetch(PDO::FETCH_ASSOC)) {
             $orderIds[] = $row['order_id'];
         }
-
-        // Notify the user that the product is in use by orders and display order IDs
-        echo "<div class='alert alert-warning'>This product is ordered by the following orders:</div>";
-        echo "<ul>";
-        foreach ($orderIds as $orderId) {
-            echo "<li>Order ID: $orderId</li>";
-        }
-        echo "</ul>";
-        echo "<p>You cannot delete this product until it is removed from these orders.</p>";
+        $_SESSION['orderIds'] = $orderIds; // Store orderIds in session
+        header('Location: product_read.php?action=fail');
     } else {
         // There are no associated orders, delete the product directly
         $deleteProductQuery = "DELETE FROM products WHERE id = ?";
@@ -43,4 +38,3 @@ try {
 } catch (PDOException $exception) {
     die('ERROR: ' . $exception->getMessage());
 }
-?>
