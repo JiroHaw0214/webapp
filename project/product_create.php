@@ -23,27 +23,36 @@ checkSession();
         </div>
 
         <?php
+        $name = $category_id = $description = $price = $promotion_price = $manufacture_date = $expired_date = '';
         if ($_POST) {
             // include database connection
             include 'config/database.php';
             try {
-                // insert query
+                $errorMessage = array();
+
+                // Check if the product name already exists
+                $check_query = "SELECT id FROM products WHERE name = :name";
+                $check_stmt = $con->prepare($check_query);
+                $check_stmt->bindParam(':name', $_POST['name']);
+                $check_stmt->execute();
+
+                if ($check_stmt->rowCount() > 0) {
+                    $errorMessage[] = "Product name already exists. Please choose a different name.";
+                }
+                // The product name is unique, proceed with insertion
                 $query = "INSERT INTO products SET name=:name, category_id=:category_id, description=:description, price=:price, promotion_price=:promotion_price, manufacture_date=:manufacture_date, expired_date=:expired_date, image=:image, created=:created";
-                // prepare query for execution
                 $stmt = $con->prepare($query);
                 $name = $_POST['name'];
                 $category_id = $_POST['category_id'];
                 $description = $_POST['description'];
                 $price = $_POST['price'];
-                $promotion_price = isset($_POST['promotion_price']) ? $_POST['promotion_price'] : null; // Make promotion_price optional
+                $promotion_price = $_POST['promotion_price'];
                 $manufacture_date = $_POST['manufacture_date'];
-                $expired_date = isset($_POST['expired_date']) ? $_POST['expired_date'] : null; // Make expired_date optional
+                $expired_date = $_POST['expired_date'];
+
 
                 //Datetime objects
                 $dateStart = new DateTime($manufacture_date);
-
-                $errorMessage = array();
-
                 if (!empty($_FILES["image"]["name"])) {
                     $image = sha1_file($_FILES['image']['tmp_name']) . "-" . basename($_FILES["image"]["name"]);
                     $target_directory = "uploads/";
@@ -130,9 +139,9 @@ checkSession();
                     $stmt->bindParam(':category_id', $category_id);
                     $stmt->bindParam(':description', $description);
                     $stmt->bindParam(':price', $price);
-                    $stmt->bindParam(':promotion_price', $promotion_price, PDO::PARAM_NULL); // Bind as NULL if it's empty
+                    $stmt->bindParam(':promotion_price', $promotion_price); // Bind as NULL if it's empty
                     $stmt->bindParam(':manufacture_date', $manufacture_date);
-                    $stmt->bindParam(':expired_date', $expired_date, PDO::PARAM_NULL); // Bind as NULL if it's empty
+                    $stmt->bindParam(':expired_date', $expired_date); // Bind as NULL if it's empty
                     $stmt->bindParam(":image", $image);
                     $created = date('Y-m-d H:i:s'); // get the current date and time
                     $stmt->bindParam(':created', $created);
@@ -140,8 +149,9 @@ checkSession();
                     // Execute the query
                     if ($stmt->execute()) {
                         echo "<div class='alert alert-success m-3'>Record was saved.</div>";
-                        // 清空输入字段
-                        $name = $description = $price = $promotion_price = $manufacture_date = $expired_date = "";
+
+                        // Reset form fields
+                        $name = $category_id = $description = $price = $promotion_price = $manufacture_date = $expired_date = $image = '';
                     } else {
                         echo "<div class='alert alert-danger m-3'>Unable to save the record.</div>";
                     }
@@ -160,7 +170,7 @@ checkSession();
                 <table class='table table-hover table-responsive table-bordered'>
                     <tr>
                         <td>Name</td>
-                        <td><input type='text' name='name' id='name' class='form-control' value="<?php echo isset($_POST['name']) ? $_POST['name'] : ''; ?>" /></td>
+                        <td><input type='text' name='name' id='name' class='form-control' value="<?php echo htmlspecialchars($name); ?>" /></td>
                     </tr>
                     <tr>
                         <td>Category</td>
@@ -179,9 +189,9 @@ checkSession();
                                         $options[$row['id']] = $row['category_name'];
                                     }
                                 }
-
                                 foreach ($options as $id => $category_name) {
-                                    echo "<option value='" . $id . "'>" . $category_name . "</option>";
+                                    $selected = ($category_id == $id) ? "selected" : "";
+                                    echo "<option value='" . $id . "' $selected>" . $category_name . "</option>";
                                 }
                                 ?>
                             </select>
@@ -189,23 +199,23 @@ checkSession();
                     </tr>
                     <tr>
                         <td>Description</td>
-                        <td><textarea name='description' id='description' class='form-control'><?php echo isset($_POST['description']) ? $_POST['description'] : ''; ?></textarea></td>
+                        <td><textarea name='description' id='description' class='form-control'><?php echo htmlspecialchars($description); ?></textarea></td>
                     </tr>
                     <tr>
                         <td>Price (RM)</td>
-                        <td><input type='text' name='price' id='price' class='form-control' value="<?php echo isset($_POST['price']) ? $_POST['price'] : ''; ?>" /></td>
+                        <td><input type='text' name='price' id='price' class='form-control' value="<?php echo htmlspecialchars($price); ?>" /></td>
                     </tr>
                     <tr>
                         <td>Promotion Price (RM)</td>
-                        <td><input type='text' name='promotion_price' id='promotion_price' class='form-control' value="<?php echo isset($_POST['promotion_price']) ? $_POST['promotion_price'] : ''; ?>" /></td>
+                        <td><input type='text' name='promotion_price' id='promotion_price' class='form-control' value="<?php echo htmlspecialchars($promotion_price); ?>" /></td>
                     </tr>
                     <tr>
                         <td>Manufacture Date</td>
-                        <td><input type='date' name='manufacture_date' class='form-control' value="<?php echo isset($_POST['manufacture_date']) ? $_POST['manufacture_date'] : ''; ?>" /></td>
+                        <td><input type='date' name='manufacture_date' class='form-control' value="<?php echo htmlspecialchars($manufacture_date); ?>" /></td>
                     </tr>
                     <tr>
                         <td>Expired Date</td>
-                        <td><input type='date' name='expired_date' class='form-control' value="<?php echo isset($_POST['expired_date']) ? $_POST['expired_date'] : ''; ?>" /></td>
+                        <td><input type='date' name='expired_date' class='form-control' value="<?php echo htmlspecialchars($expired_date); ?>" /></td>
                     </tr>
                     <tr>
                         <td>Photo</td>
@@ -236,31 +246,6 @@ checkSession();
                 if ($(this).val().split('.').length > 2) {
                     var parts = $(this).val().split('.');
                     $(this).val(parts[0] + '.' + parts.slice(1).join(''));
-                }
-            });
-        });
-
-        document.getElementById("name").value = "";
-        document.getElementById("description").value = "";
-        document.getElementById("price").value = "";
-        document.getElementById("promotion_price").value = "";
-
-        $(document).ready(function() {
-            // 监听价格输入框的 blur 事件
-            $("#price, #promotion_price").on("blur", function() {
-                // 获取输入的值
-                var inputValue = $(this).val();
-
-                // 使用 parseFloat 将输入的值转换为浮点数
-                var floatValue = parseFloat(inputValue);
-
-                // 检查是否为有效数字
-                if (!isNaN(floatValue)) {
-                    // 使用 toFixed 方法将浮点数格式化为两位小数
-                    var formattedValue = floatValue.toFixed(2);
-
-                    // 更新输入框的值
-                    $(this).val(formattedValue);
                 }
             });
         });

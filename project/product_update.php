@@ -38,7 +38,7 @@ checkSession();
     <!-- Container -->
     <div class="container">
         <?php include 'includes/navbar.php'; ?>
-        <div class="page-header">
+        <div class="p-3">
             <h1>Update Product</h1>
         </div>
         <!-- PHP read record by ID will be here -->
@@ -202,7 +202,7 @@ checkSession();
                 <tr>
                     <td>Manufacture Date</td>
                     <td><input type='date' name='manufacture_date' value="<?php echo htmlspecialchars($manufacture_date, ENT_QUOTES); ?>" class='form-control' /></td>
-                </tr>f
+                </tr>
                 <tr>
                     <td>Expired Date</td>
                     <td><input type='date' name='expired_date' value="<?php echo htmlspecialchars($expired_date, ENT_QUOTES); ?>" class='form-control' /></td>
@@ -228,7 +228,7 @@ checkSession();
                     <td></td>
                     <td>
                         <input type='submit' value='Save Changes' class='btn btn-primary' />
-                        <a href='product_read.php' class='btn btn-danger'>Back to read products</a>
+                        <a href='product_read.php' class='btn btn-danger'>Back to Product List</a>
                     </td>
                 </tr>
             </table>

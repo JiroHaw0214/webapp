@@ -21,7 +21,7 @@ checkSession();
         include 'includes/navbar.php';
         ?>
 
-        <div class="page-header">
+        <div class="p-3">
             <h1>Contact Form</h1>
         </div>
         <?php
@@ -36,6 +36,8 @@ checkSession();
             // Check each field for empty values and store error messages in the $errors array
             if (empty($_POST['name'])) {
                 $errors[] = "Name is required.";
+            } elseif (!preg_match("/^[a-zA-Z]+$/", $_POST['name'])) {
+                $errors[] = "Name must contain only English letters.";
             } else {
                 $name = $_POST['name'];
             }
@@ -75,6 +77,7 @@ checkSession();
                     // Execute the query
                     if ($stmt->execute()) {
                         echo "<div class='alert alert-success'>Message sent successfully.</div>";
+                        $name = $message = $email = '';
                     } else {
                         echo "<div class='alert alert-danger'>Unable to send message.</div>";
                     }

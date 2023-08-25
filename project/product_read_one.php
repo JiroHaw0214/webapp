@@ -18,7 +18,7 @@ checkSession();
         include 'includes/navbar.php';
         ?>
 
-        <div class="page-header">
+        <div class="p-3">
             <h1>Product Detail</h1>
         </div>
 
@@ -34,7 +34,8 @@ checkSession();
         // read current record's data
         try {
             // prepare select query
-            $query = "SELECT id, name, description, price, image FROM products WHERE id = :id ";
+            $query = "SELECT products.id, products.name, products.description, products.promotion_price, products.price, products.manufacture_date, products.expired_date, products.image,
+            category.category_name FROM products INNER JOIN category  ON products.category_id = category.id WHERE products.id=:id";
             $stmt = $con->prepare($query);
 
             // Bind the parameter
@@ -49,8 +50,12 @@ checkSession();
             // values to fill up our form
             $name = $row['name'];
             $description = $row['description'];
+            $category_name = $row['category_name'];
             $price = $row['price'];
-            $image = $row['image']; // Retrieve the image filename
+            $promotion_price = $row['promotion_price'];
+            $manufacture_date = $row['manufacture_date'];
+            $expired_date = $row['expired_date'];
+            $image = $row['image'];
         }
 
         // show error
@@ -67,13 +72,33 @@ checkSession();
                 <td><?php echo htmlspecialchars($name, ENT_QUOTES);  ?></td>
             </tr>
             <tr>
+                <td>Category</td>
+                <td><?php echo htmlspecialchars($category_name, ENT_QUOTES);  ?></td>
+            </tr>
+            <tr>
                 <td>Description</td>
                 <td><?php echo htmlspecialchars($description, ENT_QUOTES);  ?></td>
             </tr>
             <tr>
                 <td>Price</td>
-                <td><?php echo htmlspecialchars($price, ENT_QUOTES);  ?></td>
+                <td><?php echo htmlspecialchars("RM" . $price, ENT_QUOTES);  ?></td>
             </tr>
+            <?php if (!empty($promotion_price) && $promotion_price > 0) : ?>
+                <tr>
+                    <td>Promotion Price</td>
+                    <td><?php echo htmlspecialchars("RM" . $promotion_price, ENT_QUOTES); ?></td>
+                </tr>
+            <?php endif; ?>
+            <tr>
+                <td>Manufacture Date</td>
+                <td><?php echo htmlspecialchars($manufacture_date, ENT_QUOTES);  ?></td>
+            </tr>
+            <?php if (!empty($expired_date)) : ?>
+                <tr>
+                    <td>Expired Date</td>
+                    <td><?php echo htmlspecialchars($expired_date, ENT_QUOTES); ?></td>
+                </tr>
+            <?php endif; ?>
             <tr>
                 <td>Image</td>
                 <td>
@@ -89,7 +114,7 @@ checkSession();
             <tr>
                 <td></td>
                 <td>
-                    <a href='product_read.php' class='btn btn-danger'>Back to read products</a>
+                    <a href='product_read.php' class='btn btn-danger'>Back to Product List</a>
                 </td>
             </tr>
         </table>
