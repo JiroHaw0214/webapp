@@ -7,8 +7,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username_email = $_POST['username_email'];
     $password = $_POST['password'];
 
-    if (empty($username_email) || empty($password)) {
+    if (empty($username_email) & empty($password)) {
         $_SESSION['message'] = "Please enter username/email and password.";
+    }
+    elseif (empty($username_email)) {
+        $_SESSION['message'] = "Please enter your username/email.";
     } else {
         try {
             // Check if the entered username/email and password match the data in the database
@@ -40,6 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['message'] = $exception->getMessage();
         }
     }
+
     header("Location: login.php"); // Redirect to login.php to display the message
     exit;
 } elseif (isset($_SESSION['user_id'])) {
@@ -52,7 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html>
 
 <head>
-    <title>Product Management System</title>
+    <title>DV Product Management System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -71,6 +75,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             text-align: center;
             margin-bottom: 20px;
         }
+
+        /* Center the button */
+        .login-button {
+            text-align: center;
+        }
     </style>
 </head>
 
@@ -81,12 +90,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="col-md-6 col-lg-4 login-container">
                 <?php
                 if (isset($_SESSION['message'])) {
-                    echo '<div class = "alert alert-danger text-center">' . $_SESSION['message'] . '</div>';
+                    echo '<div class="alert alert-danger text-center">' . $_SESSION['message'] . '</div>';
                     unset($_SESSION['message']); // Clear the message after displaying it
                 }
                 ?>
                 <div class="login-header">
-                    <h2>Welcome to Product Management System</h2>
+                    <img src="img/dv.png" alt="Logo" width="100">
+                    <h2>Dream Vanguard Product Management System</h2>
                 </div>
                 <form action="<?php echo $_SERVER["PHP_SELF"]; ?>" method="POST">
                     <div class="mb-3">
@@ -97,7 +107,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <label for="password" class="form-label">Password</label>
                         <input type="password" name="password" class="form-control" id="password">
                     </div>
-                    <button type="submit" class="btn btn-primary btn-block">Login</button>
+                    <div class="login-button">
+                        <button type="submit" class="btn btn-primary btn-block">Login</button>
+                    </div>
                 </form>
             </div>
         </div>

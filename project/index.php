@@ -87,104 +87,137 @@ $neverPurchasedProducts = getNeverPurchasedProducts($con);
 <html>
 
 <head>
-    <title>Home - Product Management System</title>
+    <title>Welcome to Dream Vanguard Product Management System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .container1 {
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .page-header {
+            text-align: center;
+        }
+
+        .page-description {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .card {
+            margin-top: 20px;
+        }
+
+        .row .card {
+            flex: 0 0 calc(50% - 10px);
+            /* 2 cards per row with some spacing */
+        }
+    </style>
 </head>
 
 <body>
-
     <div class="container">
         <?php include 'includes/navbar.php'; ?>
 
-        <div class="page-header">
-            <h1>Welcome to the Product Management System</h1>
-        </div>
-        <p>This is the home page of the Product Management System. You can use this system to create and manage products and customers.</p>
-        <p>Get started by navigating to the "Create Product" or "Create Customer" page using the navigation menu above.</p>
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card mb-3">
-                    <div class="card-header">
-                        Total Customers
+        <div class="container1">
+            <div class="page-header">
+                <h1>Welcome to DV Product Management System</h1>
+
+            </div>
+            <div class="page-description">
+                <p>You can use this system to create and manage products, orders and customers.</p>
+                <p>Get started by navigating to the "Product", "Order", "Customer" page using the navigation menu above.</p>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Total Customers
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title"><?php echo $totalCustomers; ?></h5>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <h5 class="card-title"><?php echo $totalCustomers; ?></h5>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Total Products
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title"><?php echo $totalProducts; ?></h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Total Orders
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title"><?php echo $totalOrders; ?></h5>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card mb-3">
-                    <div class="card-header">
-                        Total Products
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title"><?php echo $totalProducts; ?></h5>
-                    </div>
+
+            <div class="card">
+                <div class="card-header">
+                    Latest Order
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Order ID: <?php echo $latestOrder['id']; ?></h5>
+                    <p class="card-text">Customer Name: <?php echo $latestOrder['first_name']; ?></p>
+                    <p class="card-text">Transaction Date: <?php echo $latestOrder['order_date']; ?></p>
+                    <p class="card-text">Purchase Amount: $<?php echo number_format($latestOrder['total_amount'], 2); ?></p>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card mb-3">
-                    <div class="card-header">
-                        Total Orders
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title"><?php echo $totalOrders; ?></h5>
-                    </div>
+
+            <div class="card">
+                <div class="card-header">
+                    The Order with Highest Purchased Amount
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Order ID: <?php echo $highestPurchaseOrder['id']; ?></h5>
+                    <p class="card-text">Customer Name: <?php echo $highestPurchaseOrder['first_name']; ?></p>
+                    <p class="card-text">Transaction Date: <?php echo $highestPurchaseOrder['order_date']; ?></p>
+                    <p class="card-text">Purchase Amount: $<?php echo number_format($highestPurchaseOrder['total_amount'], 2); ?></p>
                 </div>
             </div>
-        </div>
 
-        <div class="card mb-3">
-            <div class="card-header">
-                Latest Order
+            <div class="card">
+                <div class="card-header">
+                    Top 5 Selling Products
+                </div>
+                <div class="card-body">
+                    <ol>
+                        <?php foreach ($topSellingProducts as $product) : ?>
+                            <li><?php echo $product['name']; ?> (Sold: <?php echo $product['total_sold']; ?>)</li>
+                        <?php endforeach; ?>
+                    </ol>
+                </div>
             </div>
-            <div class="card-body">
-                <h5 class="card-title">Order ID: <?php echo $latestOrder['id']; ?></h5>
-                <p class="card-text">Customer Name: <?php echo $latestOrder['first_name']; ?></p>
-                <p class="card-text">Transaction Date: <?php echo $latestOrder['order_date']; ?></p>
-                <p class="card-text">Purchase Amount: $<?php echo number_format($latestOrder['total_amount'], 2); ?></p>
-            </div>
-        </div>
 
-        <div class="card mb-3">
-            <div class="card-header">
-                The Order with Highest Purchased Amount
-            </div>
-            <div class="card-body">
-                <h5 class="card-title">Order ID: <?php echo $highestPurchaseOrder['id']; ?></h5>
-                <p class="card-text">Customer Name: <?php echo $highestPurchaseOrder['first_name']; ?></p>
-                <p class="card-text">Transaction Date: <?php echo $highestPurchaseOrder['order_date']; ?></p>
-                <p class="card-text">Purchase Amount: $<?php echo number_format($highestPurchaseOrder['total_amount'], 2); ?></p>
-            </div>
-        </div>
-
-        <div class="card mb-3">
-            <div class="card-header">
-                Top 5 Selling Products
-            </div>
-            <div class="card-body">
-                <ol>
-                    <?php foreach ($topSellingProducts as $product) : ?>
-                        <li><?php echo $product['name']; ?> (Sold: <?php echo $product['total_sold']; ?>)</li>
-                    <?php endforeach; ?>
-                </ol>
-            </div>
-        </div>
-
-        <div class="card mb-3">
-            <div class="card-header">
-                Products Never Purchased
-            </div>
-            <div class="card-body">
-                <ul>
-                    <?php foreach ($neverPurchasedProducts as $product) : ?>
-                        <li><?php echo $product['name']; ?></li>
-                    <?php endforeach; ?>
-                </ul>
+            <div class="card">
+                <div class="card-header">
+                    Products Never Purchased
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <?php foreach ($neverPurchasedProducts as $product) : ?>
+                            <li><?php echo $product['name']; ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 </body>
 

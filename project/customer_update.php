@@ -30,6 +30,7 @@ checkSession();
             $username = $_POST['username'];
             $date_of_birth = $_POST['date_of_birth'];
             $image = $_FILES['image'];
+            $account_status = $_POST['account_status'];
 
             // Check if a new image is uploaded
             if (!empty($image["name"])) {
@@ -116,7 +117,7 @@ checkSession();
             }
 
             // Update customer details
-            $update_query = "UPDATE customers SET first_name=:first_name, last_name=:last_name, email=:email, gender=:gender, username=:username, image=:image, date_of_birth=:date_of_birth WHERE id=:customer_id";
+            $update_query = "UPDATE customers SET account_status=:account_status, first_name=:first_name, last_name=:last_name, email=:email, gender=:gender, username=:username, image=:image, date_of_birth=:date_of_birth WHERE id=:customer_id";
             $update_stmt = $con->prepare($update_query);
             $update_stmt->bindParam(':first_name', $first_name);
             $update_stmt->bindParam(':last_name', $last_name);
@@ -125,6 +126,7 @@ checkSession();
             $update_stmt->bindParam(':username', $username);
             $update_stmt->bindParam(':date_of_birth', $date_of_birth);
             $update_stmt->bindParam(':image', $image_name);
+            $update_stmt->bindParam(':account_status', $account_status);
             $update_stmt->bindParam(':customer_id', $customer_id);
 
             if ($update_stmt->execute()) {
@@ -201,6 +203,18 @@ checkSession();
             <div class="mb-3">
                 <label for="image" class="form-label">Upload New Image</label>
                 <input type="file" class="form-control" id="image" name="image">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">User Status</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="account_status" value="Active" <?php if ($customer['account_status'] === 'Active') echo 'checked'; ?> required>
+                    <label class="form-check-label">Active</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="account_status" value="Inactive" <?php if ($customer['account_status'] === 'Inactive') echo 'checked'; ?> required>
+                    <label class="form-check-label">Inactive</label>
+                </div>
             </div>
             <hr>
 

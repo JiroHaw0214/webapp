@@ -1,10 +1,13 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-        <a class="navbar-brand" href="index.php">Product Management System</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="index.php">
+                <img src="img/dv.png" alt="Dream Vanguard Logo" width="30" height="30" class="d-inline-block align-top">
+                Dream Vanguard
+            </a>
+        </div>
+
+        <div class="navbar-collapse collapse justify-content-center" id="navbarNav">
             <ul class="navbar-nav">
                 <li class="nav-item">
                     <a class="nav-link" href="index.php">Home</a>
@@ -48,8 +51,14 @@
                 <li class="nav-item">
                     <a class="nav-link" href="contact.php">Contact Us</a>
                 </li>
+            </ul>
+        </div>
+
+
+        <div class="navbar-right">
+            <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a href="logout.php" class="btn btn-danger">Logout</a>
+                    <a href="logout.php" class="btn btn-danger">LOGOUT</a>
                 </li>
             </ul>
         </div>
