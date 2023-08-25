@@ -13,9 +13,10 @@ checkSession();
 </head>
 
 <body>
-    <?php include 'includes/navbar.php'; ?>
 
     <div class="container">
+        <?php include 'includes/navbar.php'; ?>
+
         <?php
         // Include database connection and fetch customer data
         include 'config/database.php';

@@ -2,12 +2,14 @@
 require_once 'session_check.php';
 checkSession();
 ?>
+
 <!DOCTYPE HTML>
 <html>
 
 <head>
-    <title>Create Product</title>
+    <title>Add New Product</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 
 <body>
@@ -16,8 +18,8 @@ checkSession();
         include 'includes/navbar.php';
         ?>
 
-        <div class="page-header">
-            <h1>Create Product</h1>
+        <div class="p-3">
+            <h1>Add New Product</h1>
         </div>
 
         <?php
@@ -33,13 +35,12 @@ checkSession();
                 $category_id = $_POST['category_id'];
                 $description = $_POST['description'];
                 $price = $_POST['price'];
-                $promotion_price = $_POST['promotion_price'];
+                $promotion_price = isset($_POST['promotion_price']) ? $_POST['promotion_price'] : null; // Make promotion_price optional
                 $manufacture_date = $_POST['manufacture_date'];
-                $expired_date = $_POST['expired_date'];
+                $expired_date = isset($_POST['expired_date']) ? $_POST['expired_date'] : null; // Make expired_date optional
 
                 //Datetime objects
                 $dateStart = new DateTime($manufacture_date);
-                $dateEnd = new DateTime($expired_date);
 
                 $errorMessage = array();
 
@@ -82,6 +83,7 @@ checkSession();
                 } else {
                     $image = ""; // No image was uploaded
                 }
+
                 if (empty($name)) {
                     $errorMessage[] = "Name is required.";
                 }
@@ -90,25 +92,31 @@ checkSession();
                 }
                 if (empty($price)) {
                     $errorMessage[] = "Price is required.";
-                } else if (!is_numeric($price)) {
-                    $errorMessage[] = "Prices must be a numeric value.";
-                }
-                if (!is_numeric($promotion_price)) {
-                    $errorMessage[] = "Promotion prices must be a numeric value.";
+                } elseif (!is_numeric($price)) {
+                    $errorMessage[] = "Price must be a numeric value.";
+                } else {
+                    $price = (float)$price; // Convert to float
                 }
                 if (empty($manufacture_date)) {
-                    $errorMessage[] = "Manufacture date is required.";
+                    $errorMessage[] = "Manufacture Date is required.";
                 }
-                if (empty($expired_date)) {
-                    $errorMessage[] = "Expired date is required.";
+                if (!empty($promotion_price) && !is_numeric($promotion_price)) {
+                    $errorMessage[] = "Promotion price must be a numeric value.";
+                } elseif (!empty($promotion_price)) {
+                    $promotion_price = (float)$promotion_price; // Convert to float
                 }
-                if ($promotion_price >= $price) {
-                    $errorMessage[] = "Promotion price must be cheaper than the original price.";
+                if (!empty($manufacture_date) && !empty($expired_date)) {
+                    $dateStart = new DateTime($manufacture_date);
+                    $dateEnd = new DateTime($expired_date);
+                    if ($dateEnd <= $dateStart) {
+                        $errorMessage[] = "Expired date must be later than the manufacture date.";
+                        $expired_date = ""; // Clear the invalid value
+                    }
                 }
-                if ($expired_date <= $manufacture_date) {
-                    $errorMessage[] = "Expired date must be later than the manufacture date.";
+                if (!empty($promotion_price) && $promotion_price >= $price) {
+                    $errorMessage[] = "Promotion price must be lower than the original price.";
+                    $promotion_price = ""; // Clear the invalid value
                 }
-
 
                 if (!empty($errorMessage)) {
                     echo "<div class='alert alert-danger m-3'>";
@@ -122,9 +130,9 @@ checkSession();
                     $stmt->bindParam(':category_id', $category_id);
                     $stmt->bindParam(':description', $description);
                     $stmt->bindParam(':price', $price);
-                    $stmt->bindParam(':promotion_price', $promotion_price);
+                    $stmt->bindParam(':promotion_price', $promotion_price, PDO::PARAM_NULL); // Bind as NULL if it's empty
                     $stmt->bindParam(':manufacture_date', $manufacture_date);
-                    $stmt->bindParam(':expired_date', $expired_date);
+                    $stmt->bindParam(':expired_date', $expired_date, PDO::PARAM_NULL); // Bind as NULL if it's empty
                     $stmt->bindParam(":image", $image);
                     $created = date('Y-m-d H:i:s'); // get the current date and time
                     $stmt->bindParam(':created', $created);
@@ -132,6 +140,8 @@ checkSession();
                     // Execute the query
                     if ($stmt->execute()) {
                         echo "<div class='alert alert-success m-3'>Record was saved.</div>";
+                        // 清空输入字段
+                        $name = $description = $price = $promotion_price = $manufacture_date = $expired_date = "";
                     } else {
                         echo "<div class='alert alert-danger m-3'>Unable to save the record.</div>";
                     }
@@ -173,8 +183,6 @@ checkSession();
                                 foreach ($options as $id => $category_name) {
                                     echo "<option value='" . $id . "'>" . $category_name . "</option>";
                                 }
-
-
                                 ?>
                             </select>
                         </td>
@@ -184,11 +192,11 @@ checkSession();
                         <td><textarea name='description' id='description' class='form-control'><?php echo isset($_POST['description']) ? $_POST['description'] : ''; ?></textarea></td>
                     </tr>
                     <tr>
-                        <td>Price</td>
+                        <td>Price (RM)</td>
                         <td><input type='text' name='price' id='price' class='form-control' value="<?php echo isset($_POST['price']) ? $_POST['price'] : ''; ?>" /></td>
                     </tr>
                     <tr>
-                        <td>Promotion Price</td>
+                        <td>Promotion Price (RM)</td>
                         <td><input type='text' name='promotion_price' id='promotion_price' class='form-control' value="<?php echo isset($_POST['promotion_price']) ? $_POST['promotion_price'] : ''; ?>" /></td>
                     </tr>
                     <tr>
@@ -206,8 +214,8 @@ checkSession();
                     <tr>
                         <td></td>
                         <td>
-                            <input type='submit' value='Save' class='btn btn-primary' />
-                            <a href='product_read.php' class='btn btn-danger'>Back to read products</a>
+                            <input type='submit' value='Add' class='btn btn-primary' />
+                            <a href='product_read.php' class='btn btn-danger'>Back to Product List</a>
                         </td>
                     </tr>
                 </table>
@@ -215,7 +223,48 @@ checkSession();
         </div>
     </div>
     <!-- end container -->
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    <script>
+        // JavaScript to validate price inputs
+        $(document).ready(function() {
+            $("#price, #promotion_price").on("input", function() {
+                // Remove non-numeric characters except for "." (decimal point)
+                $(this).val($(this).val().replace(/[^0-9.]/g, ''));
+
+                // Ensure that there's only one decimal point
+                if ($(this).val().split('.').length > 2) {
+                    var parts = $(this).val().split('.');
+                    $(this).val(parts[0] + '.' + parts.slice(1).join(''));
+                }
+            });
+        });
+
+        document.getElementById("name").value = "";
+        document.getElementById("description").value = "";
+        document.getElementById("price").value = "";
+        document.getElementById("promotion_price").value = "";
+
+        $(document).ready(function() {
+            // 监听价格输入框的 blur 事件
+            $("#price, #promotion_price").on("blur", function() {
+                // 获取输入的值
+                var inputValue = $(this).val();
+
+                // 使用 parseFloat 将输入的值转换为浮点数
+                var floatValue = parseFloat(inputValue);
+
+                // 检查是否为有效数字
+                if (!isNaN(floatValue)) {
+                    // 使用 toFixed 方法将浮点数格式化为两位小数
+                    var formattedValue = floatValue.toFixed(2);
+
+                    // 更新输入框的值
+                    $(this).val(formattedValue);
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

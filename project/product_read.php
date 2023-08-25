@@ -16,7 +16,7 @@ checkSession();
         include 'includes/navbar.php';
         ?>
 
-        <div class="page-heaader">
+        <div class="p-3">
             <h1>Products List</h1>
         </div>
 
@@ -58,7 +58,7 @@ checkSession();
         $num = $stmt->rowCount();
 
         // link to create record form
-        echo "<a href='product_create.php' class='btn btn-primary mb-3'>Create New Product</a>";
+        echo "<a href='product_create.php' class='btn btn-primary mb-3 mt-3 '>Add New Product</a>";
 
         // check if more than 0 records found
         if ($num > 0) {
@@ -107,11 +107,10 @@ checkSession();
                 }
                 echo "<td>";
                 // read one record
-                echo "<a href='product_read_one.php?id={$id}' class='btn btn-info me-3'>Read</a>";
-
+                echo "<a href='product_read_one.php?id={$id}' class='btn btn-info me-3 '>Read</a>";
                 // we will use these links in the next part of this post
-                echo "<a href='product_update.php?id={$id}' class='btn btn-primary me-3'>Edit</a>";
-                echo "<a href='#' onclick='product_delete({$id});'  class='btn btn-danger'>Delete</a>";
+                echo "<a href='product_update.php?id={$id}' class='btn btn-primary me-3 mt-1'>Edit</a>";
+                echo "<a href='#' onclick='product_delete({$id});'  class='btn btn-danger mt-1'>Delete</a>";
                 echo "</td>";
                 echo "</tr>";
             }

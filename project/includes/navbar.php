@@ -17,7 +17,7 @@
                         Product
                     </a>
                     <div class="dropdown-menu" aria-labelledby="productDropdown">
-                        <a class="dropdown-item" href="product_create.php">Create Product</a>
+                        <a class="dropdown-item" href="product_create.php">Add Product</a>
                         <a class="dropdown-item" href="product_read.php">Product List</a>
                     </div>
                 </li>
