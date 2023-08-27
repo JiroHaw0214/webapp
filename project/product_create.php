@@ -214,7 +214,7 @@ checkSession();
                     </tr>
                     <tr>
                         <td>Manufacture Date</td>
-                        <td><input type='date' name='manufacture_date' class='form-control' value="<?php echo htmlspecialchars($manufacture_date); ?>" /></td>
+                        <td><input type='date' name='manufacture_date' class='form-control' value="<?php echo htmlspecialchars($manufacture_date); ?>" max="<?php echo date('Y-m-d'); ?>"/></td>
                     </tr>
                     <tr>
                         <td>Expired Date</td>

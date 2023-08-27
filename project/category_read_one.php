@@ -43,7 +43,7 @@ if (!$category) {
         include 'includes/navbar.php';
         ?>
 
-        <div class="page-header">
+        <div class="p-3">
             <h1>Category Details</h1>
         </div>
 

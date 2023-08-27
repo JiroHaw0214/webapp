@@ -17,7 +17,7 @@ checkSession();
         include 'includes/navbar.php';
         ?>
 
-        <div class="page-header">
+        <div class="p-3">
             <h1>Customer List</h1>
         </div>
 

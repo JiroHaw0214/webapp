@@ -21,8 +21,9 @@ checkSession();
         // Include database connection and fetch customer data
         include 'config/database.php';
 
-        if ($_SERVER["REQUEST_METHOD"] == "POST") {
-            // Form is submitted, update customer details
+        $errors = array(); // 用于保存错误消息
+
+        if ($_POST) {            // Form is submitted, update customer details
             $customer_id = $_POST['customer_id'];
             $first_name = $_POST['first_name'];
             $last_name = $_POST['last_name'];
@@ -30,110 +31,143 @@ checkSession();
             $gender = $_POST['gender'];
             $username = $_POST['username'];
             $date_of_birth = $_POST['date_of_birth'];
-            $image = $_FILES['image'];
+            $image = $_FILES['new_image'];
             $account_status = $_POST['account_status'];
 
-            // Check if a new image is uploaded
-            if (!empty($image["name"])) {
-                // Process the new image upload
-                $upload_dir = "uploads/";
-                $image_name = basename($image["name"]);
-                $target_path = $upload_dir . $image_name;
+            if (empty($_POST['first_name'])) {
+                $errors[] = "First Name is required.";
+            } else if (!ctype_alpha($_POST['first_name'])) {
+                $errors[] = "First Name should contain only letters.";
+            } else {
+                $first_name = $_POST['first_name'];
+            }
 
-                // Check file type and size
-                $imageFileType = strtolower(pathinfo($target_path, PATHINFO_EXTENSION));
-                $allowed_extensions = array("jpg", "jpeg", "png", "gif");
-                $max_file_size = 524288; // 512 KB
+            if (empty($_POST['last_name'])) {
+                $errors[] = "Last Name is required.";
+            } else if (!ctype_alpha($_POST['last_name'])) {
+                $errors[] = "Last Name should contain only letters.";
+            } else {
+                $last_name = $_POST['last_name'];
+            }
 
-                if (!in_array($imageFileType, $allowed_extensions)) {
-                    echo "<div class='alert alert-danger'>Only JPG, JPEG, PNG, and GIF files are allowed.</div>";
-                } elseif ($image["size"] > $max_file_size) {
-                    echo "<div class='alert alert-danger'>Image must be less than 512 KB in size.</div>";
-                } else {
-                    // Get the current image filename
-                    $current_image_query = "SELECT image FROM customers WHERE id=:customer_id";
-                    $current_image_stmt = $con->prepare($current_image_query);
-                    $current_image_stmt->bindParam(':customer_id', $customer_id);
-                    $current_image_stmt->execute();
-                    $current_image = $current_image_stmt->fetch(PDO::FETCH_ASSOC)['image'];
+            if (empty($date_of_birth)) {
+                $errors[] = "Date of Birth is required.";
+            } else {
+                $date_of_birth  = $_POST['date_of_birth'];
+            }
 
-                    // Delete the current image from the server
-                    if (!empty($current_image) && file_exists('uploads/' . $current_image)) {
-                        unlink('uploads/' . $current_image);
-                    }
-
-                    // Upload the new image
-                    move_uploaded_file($image["tmp_name"], "uploads/$image_name");
+            if (isset($_POST['delete_image'])) {
+                if (!empty($new_image) && file_exists("uploads/{$image}")) {
+                    unlink("uploads/{$image}");
+                    $image = null;
                 }
             }
 
+            if (!empty($_FILES["new_image"]["name"])) {
+                $new_image = $_FILES["new_image"];
+                $upload_dir = "uploads/";
+                $original_image_name = basename($new_image["name"]);
+                $imageFileType = strtolower(pathinfo($original_image_name, PATHINFO_EXTENSION));
+                $max_file_size = 524288; // 512 KB
 
-            // Validate password fields
-            if (empty($_POST['old_password']) || empty($_POST['new_password']) || empty($_POST['confirm_password'])) {
-                echo "<div class='alert alert-danger'>All password fields are required.</div>";
-            } else {
-                $old_password = $_POST['old_password'];
-                $new_password = $_POST['new_password'];
-                $confirm_password = $_POST['confirm_password'];
+                // 检查文件名是否已存在
+                $new_image_name = sha1_file($new_image["tmp_name"]) . "-" . $original_image_name;
+                $target_path = $upload_dir . $new_image_name;
 
-                // Fetch the customer's current password from the database
-                $password_query = "SELECT password FROM customers WHERE id=:customer_id";
-                $password_stmt = $con->prepare($password_query);
-                $password_stmt->bindParam(':customer_id', $customer_id);
-                $password_stmt->execute();
-                $result = $password_stmt->fetch(PDO::FETCH_ASSOC);
-                $current_password = $result['password'];
-
-                if (strlen($new_password) < 8) {
-                    echo "<div class='alert alert-danger'>New password should be at least 8 characters long.</div>";
+                if (file_exists($target_path)) {
+                    $errors[] = "Image already exists. Try to change the file name.";
                 } else {
-                    // Check if the new password matches the confirmation
-                    if ($new_password !== $confirm_password) {
-                        echo "<div class='alert alert-danger'>New password and confirm password do not match.</div>";
+                    // 检查文件类型和大小
+                    $allowed_extensions = array("jpg", "jpeg", "png", "gif");
+                    if (!in_array($imageFileType, $allowed_extensions)) {
+                        $errors[] = "Only JPG, JPEG, PNG, and GIF files are allowed.";
+                    } elseif ($new_image["size"] > $max_file_size) {
+                        $errors[] = "Image must be less than 512 KB in size.";
                     } else {
-                        // Validate the old password
-                        if (!password_verify($old_password, $current_password)) {
-                            echo "<div class='alert alert-danger'>Old password is incorrect.</div>";
+                        // 检查图像是否为正方形
+                        list($width, $height) = getimagesize($new_image["tmp_name"]);
+                        if ($width != $height) {
+                            $errors[] = "Only square image allowed.";
                         } else {
-                            // Check if the new password is the same as the old password
-                            if ($new_password === $old_password) {
-                                echo "<div class='alert alert-danger'>New password cannot be the same as the old password.</div>";
+                            // 将上传的图像移动到目标目录
+                            if (move_uploaded_file($new_image["tmp_name"], $target_path)) {
+                                $image = $new_image_name;
                             } else {
-                                // Update the new password in the database
-                                $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-                                $update_password_query = "UPDATE customers SET password=:password WHERE id=:customer_id";
-                                $update_password_stmt = $con->prepare($update_password_query);
-                                $update_password_stmt->bindParam(':password', $hashed_password);
-                                $update_password_stmt->bindParam(':customer_id', $customer_id);
-
-                                if ($update_password_stmt->execute()) {
-                                    echo "<div class='alert alert-success'>Customer Password updated successfully.</div>";
-                                } else {
-                                    echo "<div class='alert alert-danger'>Error updating password.</div>";
-                                }
+                                $errors[] = "Failed to upload the new image.";
                             }
                         }
                     }
                 }
             }
 
-            // Update customer details
-            $update_query = "UPDATE customers SET account_status=:account_status, first_name=:first_name, last_name=:last_name, email=:email, gender=:gender, username=:username, image=:image, date_of_birth=:date_of_birth WHERE id=:customer_id";
-            $update_stmt = $con->prepare($update_query);
-            $update_stmt->bindParam(':first_name', $first_name);
-            $update_stmt->bindParam(':last_name', $last_name);
-            $update_stmt->bindParam(':email', $email);
-            $update_stmt->bindParam(':gender', $gender);
-            $update_stmt->bindParam(':username', $username);
-            $update_stmt->bindParam(':date_of_birth', $date_of_birth);
-            $update_stmt->bindParam(':image', $image_name);
-            $update_stmt->bindParam(':account_status', $account_status);
-            $update_stmt->bindParam(':customer_id', $customer_id);
 
-            if ($update_stmt->execute()) {
-                echo "<div class='alert alert-success'>Customer details updated successfully.</div>";
+            // Check if any of the password fields is filled out
+            if (!empty($_POST['old_password']) || !empty($_POST['new_password']) || !empty($_POST['confirm_password'])) {
+                // At least one of the password fields is filled out
+
+                // Check if all three password fields are filled
+                if (empty($_POST['old_password']) || empty($_POST['new_password']) || empty($_POST['confirm_password'])) {
+                    // Not all three password fields are filled
+                    $errors[] = "Please fill out all three password fields.";
+                } else {
+                    // All three password fields are filled
+                    $old_password = $_POST['old_password'];
+                    $new_password = $_POST['new_password'];
+                    $confirm_password = $_POST['confirm_password'];
+
+                    // Fetch the customer's current password from the database
+                    $password_query = "SELECT password FROM customers WHERE id=:customer_id";
+                    $password_stmt = $con->prepare($password_query);
+                    $password_stmt->bindParam(':customer_id', $customer_id);
+                    $password_stmt->execute();
+                    $result = $password_stmt->fetch(PDO::FETCH_ASSOC);
+                    $current_password = $result['password'];
+
+                    if (strlen($new_password) < 8 || !preg_match("#[0-9]+#", $new_password) || !preg_match("#[A-Z]+#", $new_password) || !preg_match("#[a-z]+#", $new_password) || !preg_match("/[!@#$%^&*()\-_=+{};:,<.>]/", $new_password)) {
+                        $errors[] = "New password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.";
+                    } elseif ($new_password !== $confirm_password) {
+                        $errors[] = "New password and confirm password do not match.";
+                    } elseif (!password_verify($old_password, $current_password)) {
+                        $errors[] = "Old password is incorrect.";
+                    } elseif ($new_password === $old_password) {
+                        $errors[] = "New password cannot be the same as the old password.";
+                    } else {
+                        // Update the new password in the database
+                        $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+                        $update_password_query = "UPDATE customers SET password=:password WHERE id=:customer_id";
+                        $update_password_stmt = $con->prepare($update_password_query);
+                        $update_password_stmt->bindParam(':password', $hashed_password);
+                        $update_password_stmt->bindParam(':customer_id', $customer_id);
+                        $update_password_stmt->execute();
+                    }
+                }
+            }
+
+
+            // If there are no errors, update customer details
+            if (empty($errors)) {
+                $update_query = "UPDATE customers SET account_status=:account_status, first_name=:first_name, last_name=:last_name, email=:email, gender=:gender, username=:username, image=:image, date_of_birth=:date_of_birth WHERE id=:customer_id";
+                $update_stmt = $con->prepare($update_query);
+                $update_stmt->bindParam(':first_name', $first_name);
+                $update_stmt->bindParam(':last_name', $last_name);
+                $update_stmt->bindParam(':email', $email);
+                $update_stmt->bindParam(':gender', $gender);
+                $update_stmt->bindParam(':username', $username);
+                $update_stmt->bindParam(':date_of_birth', $date_of_birth);
+                $update_stmt->bindParam(':image', $new_image_name);
+                $update_stmt->bindParam(':account_status', $account_status);
+                $update_stmt->bindParam(':customer_id', $customer_id);
+
+                if ($update_stmt->execute()) {
+                    echo "<div class='alert alert-success mt-3'>Customer details updated successfully.</div>";
+                } else {
+                    echo "<div class='alert alert-danger'>Error updating customer details.</div>";
+                }
             } else {
-                echo "<div class='alert alert-danger'>Error updating customer details.</div>";
+                // Display error messages
+                foreach ($errors as $error) {
+                    echo "<div class='alert alert-danger'>$error</div>";
+                }
             }
         }
 
@@ -146,7 +180,7 @@ checkSession();
         $customer = $customer_stmt->fetch(PDO::FETCH_ASSOC);
         ?>
 
-        <div class="page-header">
+        <div class="p-3">
             <h1>Edit Customer Details</h1>
         </div>
 
@@ -155,37 +189,37 @@ checkSession();
 
             <div class="mb-3">
                 <label for="username" class="form-label">Username</label>
-                <input type="text" class="form-control" id="username" name="username" value="<?php echo $customer['username']; ?>" required>
+                <input type="text" class="form-control" readonly id="username" name="username" value="<?php echo $customer['username']; ?>">
             </div>
             <div class="mb-3">
                 <label for="first_name" class="form-label">First Name</label>
-                <input type="text" class="form-control" id="first_name" name="first_name" value="<?php echo $customer['first_name']; ?>" required>
+                <input type="text" class="form-control" id="first_name" name="first_name" value="<?php echo $customer['first_name']; ?>">
             </div>
 
             <div class="mb-3">
                 <label for="last_name" class="form-label">Last Name</label>
-                <input type="text" class="form-control" id="last_name" name="last_name" value="<?php echo $customer['last_name']; ?>" required>
+                <input type="text" class="form-control" id="last_name" name="last_name" value="<?php echo $customer['last_name']; ?>">
             </div>
 
             <div class="mb-3">
                 <label for="email" class="form-label">Email</label>
-                <input type="email" class="form-control" id="email" name="email" value="<?php echo $customer['email']; ?>" required>
+                <input type="email" class="form-control" id="email" name="email" value="<?php echo $customer['email']; ?>">
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Gender</label>
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="gender" value="Male" <?php if ($customer['gender'] === 'Male') echo 'checked'; ?> required>
+                    <input class="form-check-input" type="radio" name="gender" value="Male" <?php if ($customer['gender'] === 'Male') echo 'checked'; ?>>
                     <label class="form-check-label">Male</label>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="gender" value="Female" <?php if ($customer['gender'] === 'Female') echo 'checked'; ?> required>
+                    <input class="form-check-input" type="radio" name="gender" value="Female" <?php if ($customer['gender'] === 'Female') echo 'checked'; ?>>
                     <label class="form-check-label">Female</label>
                 </div>
             </div>
             <div class="mb-3">
                 <label for="date_of_birth" class="form-label">Date of Birth</label>
-                <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" value="<?php echo $customer['date_of_birth']; ?>" required>
+                <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" value="<?php echo $customer['date_of_birth']; ?>" max="<?php echo date('Y-m-d'); ?>">
             </div>
             <!-- Existing Image -->
             <div class="mb-3">
@@ -203,7 +237,7 @@ checkSession();
             <!-- Upload New Image -->
             <div class="mb-3">
                 <label for="image" class="form-label">Upload New Image</label>
-                <input type="file" class="form-control" id="image" name="image">
+                <td><input type='file' name='new_image' accept='image/*' class='form-control' /></td>
             </div>
 
             <div class="mb-3">

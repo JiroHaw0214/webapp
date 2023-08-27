@@ -20,7 +20,7 @@ checkSession();
         <?php
         include 'includes/navbar.php';
         ?>
-        <div class="page-header">
+        <div class="p-3">
             <h1>Create Category</h1>
         </div>
         <?php
@@ -65,13 +65,13 @@ checkSession();
 
                     // Execute the query
                     if ($stmt->execute()) {
-                        echo "<div class='alert alert-success'>Category created successfully.</div>";
+                        echo "<div class='alert alert-success'>Category Created Successfully.</div>";
 
                         // Reset form fields
                         $category_name = '';
                         $description = '';
                     } else {
-                        echo "<div class='alert alert-danger'>Unable to create category.</div>";
+                        echo "<div class='alert alert-danger'>Unable to Create Category.</div>";
                     }
                 } catch (PDOException $exception) {
                     echo '<div class="alert alert-danger">' . $exception->getMessage() . '</div>';

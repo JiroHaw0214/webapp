@@ -6,7 +6,7 @@ checkSession();
 <html>
 
 <head>
-    <title>Create Customer</title>
+    <title>Add Customer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .error-message {
@@ -21,8 +21,8 @@ checkSession();
         include 'includes/navbar.php';
         ?>
 
-        <div class="page-header">
-            <h1>Create Customer</h1>
+        <div class="p-3">
+            <h1>Add Customer</h1>
         </div>
         <?php
         $username = $password = $confirm_password = $first_name = $last_name = $email = $gender = $date_of_birth = '';
@@ -32,6 +32,8 @@ checkSession();
             include 'config/database.php';
 
             $errors = array(); // Array to store error messages
+
+            // Check if an image is uploaded
             if (!empty($_FILES["image"]["name"])) {
                 $image = sha1_file($_FILES['image']['tmp_name']) . "-" . basename($_FILES["image"]["name"]);
                 $target_directory = "uploads/";
@@ -71,17 +73,29 @@ checkSession();
             } else {
                 $image = ""; // No image was uploaded
             }
-            // Check each field for empty values and store error messages in the $errors array
+
+            // Username validation: Check if the username already exists in the database
+            $query = "SELECT COUNT(*) as count FROM customers WHERE username = :username";
+            $stmt = $con->prepare($query);
+            $stmt->bindParam(':username', $_POST['username']);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
             if (empty($_POST['username'])) {
                 $errors[] = "Username is required.";
+            } else if ($result['count'] > 0) {
+                $errors[] = "Username already taken. Please choose a different username.";
             } else {
                 $username = $_POST['username'];
             }
+
             if (empty($_POST['password'])) {
                 $errors[] = "Password is required.";
+            } else if (strlen($_POST['password']) < 8 || !preg_match("#[0-9]+#", $_POST['password']) || !preg_match("#[A-Z]+#", $_POST['password']) || !preg_match("#[a-z]+#", $_POST['password']) || !preg_match("/[!@#$%^&*()\-_=+{};:,<.>]/", $_POST['password'])) {
+                $errors[] = "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.";
             } else {
                 $password = $_POST['password'];
             }
+
             if (empty($_POST['confirm_password'])) {
                 $errors[] = "Confirm Password is required.";
             } else {
@@ -92,19 +106,33 @@ checkSession();
             }
             if (empty($_POST['first_name'])) {
                 $errors[] = "First Name is required.";
+            } else if (!ctype_alpha($_POST['first_name'])) {
+                $errors[] = "First Name should contain only letters.";
             } else {
                 $first_name = $_POST['first_name'];
             }
             if (empty($_POST['last_name'])) {
                 $errors[] = "Last Name is required.";
+            } else if (!ctype_alpha($_POST['last_name'])) {
+                $errors[] = "Last Name should contain only letters.";
             } else {
                 $last_name = $_POST['last_name'];
             }
+
+
+            $query = "SELECT COUNT(*) as count FROM customers WHERE email = :email";
+            $stmt = $con->prepare($query);
+            $stmt->bindParam(':email', $_POST['email']);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
             if (empty($_POST['email'])) {
                 $errors[] = "Email is required.";
+            } else if ($result['count'] > 0) {
+                $errors[] = "Email is already registered. Please use a different email address.";
             } else {
                 $email = $_POST['email'];
             }
+
             if (empty($_POST['gender'])) {
                 $errors[] = "Gender is required.";
             } else {
@@ -115,7 +143,6 @@ checkSession();
             } else {
                 $date_of_birth = $_POST['date_of_birth'];
             }
-
             // Check for error messages
             if (!empty($errors)) {
                 // Display error messages for each field
@@ -124,10 +151,6 @@ checkSession();
                     echo "<p class='error-message'>$error</p>";
                 }
                 echo "</div>";
-
-                // Reset password field
-                $password = '';
-                $confirm_password = '';
             } else {
                 try {
                     // Hash the password
@@ -151,10 +174,9 @@ checkSession();
 
                     // Execute the query
                     if ($stmt->execute()) {
-                        echo "<div class='alert alert-success'>Customer record was saved.</div>";
-
+                        echo "<div class='alert alert-success'>Customer added.</div>";
+                        $_POST = array();
                         // Reset form fields
-                        $username = $password = $confirm_password = $first_name = $last_name = $email = $gender = $date_of_birth = $image = '';
                     } else {
                         echo "<div class='alert alert-danger'>Unable to save customer record.</div>";
                     }
@@ -174,7 +196,7 @@ checkSession();
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label for="username" class="form-label">Username</label>
-                        <input type="text" name="username" class="form-control" id="username" value="<?php echo $username; ?>">
+                        <input type="text" name="username" class="form-control" id="username" value="<?php echo isset($_POST['username']) ? $_POST['username'] : ''; ?>">
                     </div>
                     <div class="mb-3">
                         <label for="image" class="form-label">Profile Image (Optional)</label>
@@ -182,7 +204,7 @@ checkSession();
                     </div>
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
-                        <input type="password" name="password" class="form-control" id="password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{6,}" title="Minimum 6 characters, starts with a letter, and allows only _ or - in between." value="<?php echo $password; ?>">
+                        <input type="password" name="password" class="form-control" id="password" value="<?php echo isset($_POST['password']) ? $_POST['password'] : ''; ?>">
                     </div>
                     <div class="mb-3">
                         <label for="confirm_password" class="form-label">Confirm Password</label>
@@ -214,8 +236,9 @@ checkSession();
                     </div>
                     <div class="mb-3">
                         <label for="date_of_birth" class="form-label">Date of Birth</label>
-                        <input type="date" name="date_of_birth" class="form-control" id="date_of_birth" value="<?php echo $date_of_birth; ?>">
+                        <input type="date" name="date_of_birth" class="form-control" id="date_of_birth" value="<?php echo $date_of_birth; ?>" max="<?php echo date('Y-m-d'); ?>">
                     </div>
+
                     <div class="mb-3">
                         <button type="submit" class="btn btn-primary">Save</button>
                         <a href="customer_read.php" class="btn btn-danger">Back to Customer List</a>

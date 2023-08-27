@@ -16,7 +16,7 @@ checkSession();
         include 'includes/navbar.php';
         ?>
 
-        <div class="page-header">
+        <div class="p-3">
             <h1>Category List</h1>
         </div>
 
@@ -30,6 +30,34 @@ checkSession();
         if ($action == 'deleted') {
             echo "<div class='alert alert-success'>Record was deleted.</div>";
         }
+
+        if ($action == "fail") {
+            if (isset($_SESSION['productIds']) && is_array($_SESSION['productIds'])) {
+                $productIds = $_SESSION['productIds'];
+        ?>
+                <div class="alert alert-warning">
+                    <strong>Warning:</strong> This category include products:
+                    <ul>
+                        <?php foreach ($productIds as $productId) { ?>
+                            <li>Product ID: <?php echo $productId; ?></li>
+                        <?php } ?>
+                    </ul>
+                    You cannot delete this category until it is removed from these products.
+                </div>
+            <?php
+            } else {
+            ?>
+                <div class="alert alert-danger">
+                    <strong>Error:</strong> An error occurred.
+                </div>
+        <?php
+            }
+        }
+
+
+        // 清除已使用的session变量
+        unset($_SESSION['productIds']);
+
 
         try {
             // Select all categories from the database

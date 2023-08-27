@@ -7,7 +7,7 @@ checkSession();
 <html>
 
 <head>
-    <title>Edit Product</title>
+    <title>Update Product</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
 
     <!-- Custom CSS -->
@@ -144,7 +144,7 @@ checkSession();
                                     // Check if the image is square
                                     list($width, $height) = getimagesize($new_image["tmp_name"]);
                                     if ($width != $height) {
-                                        $errors[] = "Image must be a square (same width and height).";
+                                        $errors[] = "Only square image allowed.";
                                     } else {
                                         // Move the uploaded image to the target directory
                                         if (move_uploaded_file($new_image["tmp_name"], $target_path)) {

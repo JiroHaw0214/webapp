@@ -3,7 +3,6 @@
 include 'config/database.php';
 session_start();
 
-
 try {
     // Get record ID
     $id = isset($_GET['id']) ? $_GET['id'] : die('ERROR: Record ID not found.');
@@ -24,6 +23,22 @@ try {
         header('Location: product_read.php?action=fail');
     } else {
         // There are no associated orders, delete the product directly
+        // First, check if the product has an associated image
+        $getImageQuery = "SELECT image FROM products WHERE id = ?";
+        $getImageStmt = $con->prepare($getImageQuery);
+        $getImageStmt->bindParam(1, $id);
+        $getImageStmt->execute();
+        
+        if ($getImageStmt->rowCount() > 0) {
+            // Product has an associated image, delete it
+            $imageRow = $getImageStmt->fetch(PDO::FETCH_ASSOC);
+            $imageFileName = $imageRow['image'];
+            if (!empty($imageFileName) && file_exists("uploads/$imageFileName")) {
+                unlink("uploads/$imageFileName");
+            }
+        }
+
+        // Now, delete the product record
         $deleteProductQuery = "DELETE FROM products WHERE id = ?";
         $deleteProductStmt = $con->prepare($deleteProductQuery);
         $deleteProductStmt->bindParam(1, $id);
@@ -38,3 +53,4 @@ try {
 } catch (PDOException $exception) {
     die('ERROR: ' . $exception->getMessage());
 }
+?>
