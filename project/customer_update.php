@@ -21,6 +21,18 @@ checkSession();
         // Include database connection and fetch customer data
         include 'config/database.php';
 
+        try {
+            $query = "SELECT  id, image FROM customers WHERE id = ? LIMIT 0,1";
+            $stmt = $con->prepare($query);
+            $stmt->bindParam(1, $id);
+            $stmt->execute();
+            if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $image = $row['image'];
+            }
+        } catch (PDOException $exception) {
+            die('ERROR: ' . $exception->getMessage());
+        }
+
         $errors = array(); // 用于保存错误消息
 
         if ($_POST) {            // Form is submitted, update customer details
@@ -31,7 +43,6 @@ checkSession();
             $gender = $_POST['gender'];
             $username = $_POST['username'];
             $date_of_birth = $_POST['date_of_birth'];
-            $image = $_FILES['new_image'];
             $account_status = $_POST['account_status'];
 
             if (empty($_POST['first_name'])) {
@@ -55,51 +66,7 @@ checkSession();
             } else {
                 $date_of_birth  = $_POST['date_of_birth'];
             }
-
-            if (isset($_POST['delete_image'])) {
-                if (!empty($new_image) && file_exists("uploads/{$image}")) {
-                    unlink("uploads/{$image}");
-                    $image = null;
-                }
-            }
-
-            if (!empty($_FILES["new_image"]["name"])) {
-                $new_image = $_FILES["new_image"];
-                $upload_dir = "uploads/";
-                $original_image_name = basename($new_image["name"]);
-                $imageFileType = strtolower(pathinfo($original_image_name, PATHINFO_EXTENSION));
-                $max_file_size = 524288; // 512 KB
-
-                // 检查文件名是否已存在
-                $new_image_name = sha1_file($new_image["tmp_name"]) . "-" . $original_image_name;
-                $target_path = $upload_dir . $new_image_name;
-
-                if (file_exists($target_path)) {
-                    $errors[] = "Image already exists. Try to change the file name.";
-                } else {
-                    // 检查文件类型和大小
-                    $allowed_extensions = array("jpg", "jpeg", "png", "gif");
-                    if (!in_array($imageFileType, $allowed_extensions)) {
-                        $errors[] = "Only JPG, JPEG, PNG, and GIF files are allowed.";
-                    } elseif ($new_image["size"] > $max_file_size) {
-                        $errors[] = "Image must be less than 512 KB in size.";
-                    } else {
-                        // 检查图像是否为正方形
-                        list($width, $height) = getimagesize($new_image["tmp_name"]);
-                        if ($width != $height) {
-                            $errors[] = "Only square image allowed.";
-                        } else {
-                            // 将上传的图像移动到目标目录
-                            if (move_uploaded_file($new_image["tmp_name"], $target_path)) {
-                                $image = $new_image_name;
-                            } else {
-                                $errors[] = "Failed to upload the new image.";
-                            }
-                        }
-                    }
-                }
-            }
-
+            echo "Image Path: " . $imagePath . "<br>";
 
             // Check if any of the password fields is filled out
             if (!empty($_POST['old_password']) || !empty($_POST['new_password']) || !empty($_POST['confirm_password'])) {
@@ -143,6 +110,49 @@ checkSession();
                 }
             }
 
+            if (isset($_POST['delete_image'])) {
+                if (!empty($image) && file_exists("uploads/{$image}")) {
+                    unlink("uploads/{$image}");
+                    $image = null;
+                }
+            }
+
+            if (!empty($_FILES["new_image"]["name"])) {
+                $new_image = $_FILES["new_image"];
+                $upload_dir = "uploads/";
+                $original_image_name = basename($new_image["name"]);
+                $imageFileType = strtolower(pathinfo($original_image_name, PATHINFO_EXTENSION));
+                $max_file_size = 524288; // 512 KB
+
+                // Check if file name already exists
+                $new_image_name = sha1_file($new_image["tmp_name"]) . "-" . $original_image_name;
+                $target_path = $upload_dir . $new_image_name;
+
+                if (file_exists($target_path)) {
+                    $errors[] = "Image already exists. Try to change the file name.";
+                } else {
+                    // Check file type and size
+                    $allowed_extensions = array("jpg", "jpeg", "png", "gif");
+                    if (!in_array($imageFileType, $allowed_extensions)) {
+                        $errors[] = "Only JPG, JPEG, PNG, and GIF files are allowed.";
+                    } elseif ($new_image["size"] > $max_file_size) {
+                        $errors[] = "Image must be less than 512 KB in size.";
+                    } else {
+                        // Check if the image is square
+                        list($width, $height) = getimagesize($new_image["tmp_name"]);
+                        if ($width != $height) {
+                            $errors[] = "Only square image allowed.";
+                        } else {
+                            // Move the uploaded image to the target directory
+                            if (move_uploaded_file($new_image["tmp_name"], $target_path)) {
+                                $image = $new_image_name;
+                            } else {
+                                $errors[] = "Failed to upload the new image.";
+                            }
+                        }
+                    }
+                }
+            }
 
             // If there are no errors, update customer details
             if (empty($errors)) {
@@ -154,7 +164,7 @@ checkSession();
                 $update_stmt->bindParam(':gender', $gender);
                 $update_stmt->bindParam(':username', $username);
                 $update_stmt->bindParam(':date_of_birth', $date_of_birth);
-                $update_stmt->bindParam(':image', $new_image_name);
+                $update_stmt->bindParam(':image', $image);
                 $update_stmt->bindParam(':account_status', $account_status);
                 $update_stmt->bindParam(':customer_id', $customer_id);
 
@@ -166,7 +176,7 @@ checkSession();
             } else {
                 // Display error messages
                 foreach ($errors as $error) {
-                    echo "<div class='alert alert-danger'>$error</div>";
+                    echo "<div class='alert alert-danger mt-3'>$error</div>";
                 }
             }
         }
@@ -222,17 +232,19 @@ checkSession();
                 <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" value="<?php echo $customer['date_of_birth']; ?>" max="<?php echo date('Y-m-d'); ?>">
             </div>
             <!-- Existing Image -->
+            <!-- Existing Image -->
             <div class="mb-3">
                 <label for="current_image" class="form-label"></label>
                 <?php
-                if (!empty($customer['image']) && file_exists('uploads/' . $customer['image'])) {
-                    echo "<img src='uploads/{$customer['image']}' class='img-thumbnail' alt='Customer Image'><br>";
-                    echo "<input type='checkbox' name='delete_image' value='1'> Delete Current Image";
+                if (!empty($image)) {
+                    echo "<img src='uploads/{$image}' class='customer-image' alt='Customer Image'>";
+                    echo "<br><input type='checkbox' name='delete_image' value='1'> Delete Current Image";
                 } else {
-                    echo '<img src="img/customer.jpg" height="100px" alt="">'; // 移除多余的</td>
+                    echo '<img src="img/customer.jpg" height="100px" alt="Default Customer Image">';
                 }
                 ?>
             </div>
+
 
             <!-- Upload New Image -->
             <div class="mb-3">

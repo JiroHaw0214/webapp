@@ -44,30 +44,30 @@ checkSession();
 
                 // Check file type
                 if (!in_array($file_type, $allowed_file_types)) {
-                    $errors[] = "<div>Only JPG, JPEG, PNG, GIF files are allowed.</div>";
+                    $errorMessage[] = "<div>Only JPG, JPEG, PNG, GIF files are allowed.</div>";
                 }
 
                 // Check file size (less than 512 KB)
                 if ($_FILES['image']['size'] > 524288) {
-                    $errors[] = "Image must be less than 512 KB in size.";
+                    $errorMessage[] = "Image must be less than 512 KB in size.";
                 }
 
                 // Check if the file already exists
                 if (file_exists($target_file)) {
-                    $errors[] = "Image already exists. Try to change the file name.";
+                    $errorMessage[] = "Image already exists. Try to change the file name.";
                 }
 
                 list($width, $height) = getimagesize($_FILES['image']['tmp_name']);
                 if ($width != $height) {
-                    $errors[] = "Only square size images are allowed.";
+                    $errorMessage[] = "Only square size images are allowed.";
                 }
 
-                if (empty($errors)) {
+                if (empty($errorMessage)) {
                     // Try to move the uploaded file to the target directory
                     if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
                         // File uploaded successfully
                     } else {
-                        $errors[] = "Unable to upload the image.";
+                        $errorMessage[] = "Unable to upload the image.";
                     }
                 }
             } else {
@@ -200,7 +200,7 @@ checkSession();
                     </div>
                     <div class="mb-3">
                         <label for="image" class="form-label">Profile Image (Optional)</label>
-                        <input type="file" name="image" class="form-control" id="image">
+                        <input type="file" name="image" class="form-control" accept="image/*">
                     </div>
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
