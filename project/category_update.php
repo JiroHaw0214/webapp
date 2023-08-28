@@ -35,7 +35,11 @@ if ($_POST) {
     // Check if category name is empty
     if (empty($newCategoryName)) {
         $error_message = "Category name cannot be empty.";
-    } else {
+    } 
+    if (empty($newDescription)) {
+        $error_message = "Description cannot be empty.";
+    } 
+    else {
         // Update the category
         $updateQuery = "UPDATE category SET category_name = :category_name, description = :description WHERE id = :category_id";
         $updateStmt = $con->prepare($updateQuery);

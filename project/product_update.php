@@ -122,7 +122,7 @@ checkSession();
                     $price = (float) $price;
                     $promotion_price = (float) $promotion_price;
 
-                    if ($promotion_price > $price) {
+                    if ($promotion_price >= $price) {
                         $errors[] = "Promotion Price cannot be greater than Price.";
                     } else {
                         // Check if the delete_image checkbox is checked

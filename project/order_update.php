@@ -16,7 +16,7 @@ checkSession();
     <!-- container -->
     <div class="container">
         <?php include 'includes/navbar.php'; ?>
-        <div class="page-header">
+        <div class="p-3">
             <h1>Update Order</h1>
         </div>
         <?php
@@ -129,16 +129,17 @@ checkSession();
             <form action="" method="post">
                 <div class="mb-3">
                     <label for="orderId" class="form-label">Order ID</label>
-                    <input type="text" class="form-control" id="orderId" value="<?php echo $order_info['order_id']; ?>" readonly>
+                    <p class="form-control-static" id="orderId"><?php echo $order_info['order_id']; ?></p>
                 </div>
                 <div class="mb-3">
                     <label for="customerName" class="form-label">Customer Name</label>
-                    <input type="text" class="form-control" id="customerName" value="<?php echo $order_info['first_name'] . ' ' . $order_info['last_name']; ?>" readonly>
+                    <p class="form-control-static" id="customerName"><?php echo $order_info['first_name'] . ' ' . $order_info['last_name']; ?></p>
                 </div>
                 <div class="mb-3">
                     <label for="orderDateTime" class="form-label">Order Date and Time</label>
-                    <input type="text" class="form-control" id="orderDateTime" value="<?php echo $order_info['order_date']; ?>" readonly>
+                    <p class="form-control-static" id="orderDateTime"><?php echo $order_info['order_date']; ?></p>
                 </div>
+
                 <table class="table table-hover table-responsive table-bordered" id="row_del">
                     <tr>
                         <th>NO.</th>
@@ -198,7 +199,7 @@ checkSession();
 
                 <div class="text-center">
                     <button type="submit" class="btn btn-primary">Place Order</button>
-                    <a href="order_list_read.php" class="btn btn-danger">Back to Read Order Summary</a>
+                    <a href="order_read.php" class="btn btn-danger">Back to Read Order Summary</a>
                 </div>
             </form>
             <script>
