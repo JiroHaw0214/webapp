@@ -49,9 +49,6 @@ checkSession();
                 $promotion_price = $_POST['promotion_price'];
                 $manufacture_date = $_POST['manufacture_date'];
                 $expired_date = $_POST['expired_date'];
-                $price = number_format($price, 2);
-                $promotion_price = ($promotion_price != null && $promotion_price != 0) ? number_format($promotion_price, 2) : '';
-
 
 
                 //Datetime objects
@@ -152,9 +149,6 @@ checkSession();
                     // Execute the query
                     if ($stmt->execute()) {
                         echo "<div class='alert alert-success m-3'>Record was saved.</div>";
-
-                        // Reset form fields
-                        $name = $category_id = $description = $price = $promotion_price = $manufacture_date = $expired_date = $image = '';
                     } else {
                         echo "<div class='alert alert-danger m-3'>Unable to save the record.</div>";
                     }
@@ -238,6 +232,21 @@ checkSession();
     <!-- end container -->
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    <script>
+        // JavaScript to validate price inputs
+        $(document).ready(function() {
+            $("#price, #promotion_price").on("input", function() {
+                // Remove non-numeric characters except for "." (decimal point)
+                $(this).val($(this).val().replace(/[^0-9.]/g, ''));
+
+                // Ensure that there's only one decimal point
+                if ($(this).val().split('.').length > 2) {
+                    var parts = $(this).val().split('.');
+                    $(this).val(parts[0] + '.' + parts.slice(1).join(''));
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

@@ -9,6 +9,20 @@ checkSession();
     <title>Customer List</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
     <!-- Latest compiled and minified Bootstrap CSS -->
+    <style>
+        /* 添加CSS样式以控制链接样式 */
+        a {
+            text-decoration: none;
+            /* 移除默认的下划线 */
+            color: black;
+            /* 设置链接颜色为黑色 */
+        }
+
+        a:hover {
+            text-decoration: underline;
+            /* 仅在悬停时显示下划线 */
+        }
+    </style>
 </head>
 
 <body>
@@ -111,21 +125,18 @@ checkSession();
                 // creating new table row per record
                 echo "<tr>";
                 echo "<td>{$id}</td>";
-                echo "<td>{$username}</td>";
+                echo "<td><a href='customer_read_one.php?id={$id}'>{$username}</a></td>";
                 echo "<td>{$first_name}</td>";
                 echo "<td>{$last_name}</td>";
                 echo "<td>{$email}</td>";
-                echo "<td>"; 
+                echo "<td>";
                 if (!empty($image)) {
                     echo "<img src='uploads/{$image}' width='100' height='100' />";
                 } else {
                     echo '<img src="img/customer.jpg" height="100px" alt="">'; // 移除多余的</td>
                 }
-                echo "</td>"; 
+                echo "</td>";
                 echo "<td>";
-                // read one record
-                echo "<a href='customer_read_one.php?id={$id}' class='btn btn-info me-3'>Read</a>";
-
                 // we will use this links on next part of this post
                 echo "<a href='customer_update.php?id={$id}' class='btn btn-primary me-3'>Edit</a>";
 

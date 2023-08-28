@@ -8,6 +8,13 @@ checkSession();
 <head>
     <title>Products List</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <style>
+        a:hover span {
+            text-decoration: underline;
+        }
+    </style>
+
+
 </head>
 
 <body>
@@ -112,7 +119,12 @@ checkSession();
                 // creating a new table row per record
                 echo "<tr>";
                 echo "<td>{$id}</td>";
-                echo "<td>{$name}</td>";
+                echo "<td><a href='product_read_one.php?id={$id}' style='color: black; text-decoration: none;'>
+    <span style='border-bottom: 1px dotted transparent;'>
+        {$name}
+    </span>
+</a></td>";
+
                 echo "<td>{$description}</td>";
 
                 echo "<td class='text-end'>";
@@ -134,9 +146,6 @@ checkSession();
                     echo "<td><img src='uploads/{$image}' class='img-fluid' alt='Product Image'></td>";
                 }
                 echo "<td>";
-                // read one record
-                echo "<a href='product_read_one.php?id={$id}' class='btn btn-info me-3 '>Read</a>";
-                // we will use these links in the next part of this post
                 echo "<a href='product_update.php?id={$id}' class='btn btn-primary me-3 mt-1'>Edit</a>";
                 echo "<a href='#' onclick='product_delete({$id});'  class='btn btn-danger mt-1'>Delete</a>";
                 echo "</td>";

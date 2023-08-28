@@ -63,14 +63,11 @@ checkSession();
                     $totalAmount = $totalAmountRow['total_amount'];
                     // creating new table row per record
                     echo "<tr>";
-                    echo "<td>{$id}</td>";
+                    echo "<td><a href='order_read_one.php?id={$id}'>{$id}</a></td>";
                     echo "<td>{$first_name} {$last_name}</td>";
                     echo "<td>{$order_date}</td>";
                     echo "<td class='text-end'>" . number_format($totalAmount, 2) . "</td>";
                     echo "<td>";
-                    // read one record
-                    echo "<a href='order_read_one.php?id={$id}' class='btn btn-info me-3'>Read</a>";
-                    // we will use this links on next part of this post
                     echo "<a href='order_update.php?id={$id}' class='btn btn-primary me-3'>Edit</a>";
                     echo "<a href='#' onclick='delete_order({$id});' class='btn btn-danger mx-2'>Delete</a>";
                     echo "</td>";

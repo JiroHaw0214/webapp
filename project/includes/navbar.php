@@ -1,3 +1,15 @@
+<style>
+    /* 移除默认的下划线，将文本颜色设为黑色 */
+    a {
+        text-decoration: none;
+        color: black;
+    }
+
+    /* 在悬停时显示下划线 */
+    a:hover {
+        text-decoration: underline;
+    }
+</style>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
         <div class="navbar-header">
