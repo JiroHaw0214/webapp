@@ -228,16 +228,10 @@ checkSession();
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Gender</label>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="gender" value="Male" <?php if ($customer['gender'] === 'Male') echo 'checked'; ?>>
-                    <label class="form-check-label">Male</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="gender" value="Female" <?php if ($customer['gender'] === 'Female') echo 'checked'; ?>>
-                    <label class="form-check-label">Female</label>
-                </div>
+                <label for="gender" class="form-label">Gender</label>
+                <input type="text" class="form-control" id="gender" name="gender" value="<?php echo $customer['gender']; ?>" readonly>
             </div>
+
             <div class="mb-3">
                 <label for="date_of_birth" class="form-label">Date of Birth</label>
                 <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" value="<?php echo $customer['date_of_birth']; ?>" max="<?php echo date('Y-m-d'); ?>">

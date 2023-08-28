@@ -80,6 +80,19 @@ checkSession();
                 $expired_date = htmlspecialchars(strip_tags($_POST['expired_date']));
 
                 $errors = [];
+                $duplicateQuery = "SELECT COUNT(*) as count FROM products WHERE name = :product_name AND id != :product_id";
+                $duplicateStmt = $con->prepare($duplicateQuery);
+                $duplicateStmt->bindParam(':product_name', $name);
+                $duplicateStmt->bindParam(':product_id', $id);
+                $duplicateStmt->execute();
+                $duplicateResult = $duplicateStmt->fetch(PDO::FETCH_ASSOC);
+                
+                if (empty($name)) {
+                    $errors[] = "Name cannot be empty.";
+                }elseif ($duplicateResult['count'] > 0) {
+                    $errors[] = "Product name already exists. Please choose a different name.";
+
+                }
 
                 if (empty($description)) {
                     $errors[] = "Description cannot be empty.";
@@ -202,7 +215,7 @@ checkSession();
             <table class='table table-hover table-responsive table-bordered'>
                 <tr>
                     <td>Name</td>
-                    <td><input type='text' name='name' value="<?php echo htmlspecialchars($name, ENT_QUOTES); ?>" class='form-control' readonly /></td>
+                    <td><input type='text' name='name' value="<?php echo htmlspecialchars($name, ENT_QUOTES); ?>" class='form-control' /></td>
                 </tr>
                 <tr>
                     <td>Description</td>
