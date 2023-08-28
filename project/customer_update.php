@@ -70,6 +70,23 @@ checkSession();
                 $last_name = $_POST['last_name'];
             }
 
+            $check_email_query = "SELECT id FROM customers WHERE email=:email AND id != :customer_id";
+            $check_email_stmt = $con->prepare($check_email_query);
+            $check_email_stmt->bindParam(':email', $email);
+            $check_email_stmt->bindParam(':customer_id', $customer_id);
+            $check_email_stmt->execute();
+            $existing_customer = $check_email_stmt->fetch(PDO::FETCH_ASSOC);
+
+
+
+            if (empty($email)) {
+                $errors[] = "Email is required.";
+            } elseif ($existing_customer) {
+                $errors[] = "This email is already registered, please use a different email address.";
+            } else {
+                $email  = $_POST['email'];
+            }
+
             if (empty($date_of_birth)) {
                 $errors[] = "Date of Birth is required.";
             } else {
