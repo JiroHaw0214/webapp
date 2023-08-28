@@ -13,12 +13,12 @@ checkSession();
 <body>
     <div class="container">
         <?php include 'includes/navbar.php'; ?>
-        <div class="page-header">
+        <div class="p-3">
             <h1>Create Order</h1>
         </div>
         <?php
         include 'config/database.php';
-        $customer_query = "SELECT id, first_name FROM customers";
+        $customer_query = "SELECT id, username FROM customers";
         $customer_stmt = $con->prepare($customer_query);
         $customer_stmt->execute();
         $customers = $customer_stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -42,7 +42,7 @@ checkSession();
                 $selected_products = array_unique($product_id);
                 $removed_duplicates = count($product_id) !== count($selected_products);
                 if ($removed_duplicates) {
-                    $error[] = "<div role='alert'>Duplicate products were selected.</div>";
+                    $error[] = "Duplicate products were selected.";
                 }
 
                 if (isset($selected_product_count)) {
@@ -100,7 +100,7 @@ checkSession();
                     <?php
                     for ($a = 0; $a < count($customers); $a++) {
                         $customer_selected = isset($_POST["customer"]) && $customers[$a]['id'] == $_POST["customer"] ? "selected" : "";
-                        echo "<option value='{$customers[$a]['id']}' $customer_selected>{$customers[$a]['first_name']}</option>";
+                        echo "<option value='{$customers[$a]['id']}' $customer_selected>{$customers[$a]['username']}</option>";
                     }
                     ?>
                 </select>
@@ -151,7 +151,7 @@ checkSession();
 
                 <div class="text-center">
                     <button type="submit" class="btn btn-primary">Place Order</button>
-                    <a href="order_read" class="btn btn-danger">Back to Read Order Summary</a>
+                    <a href="order_read" class="btn btn-danger">Back to Order List</a>
                 </div>
             </form>
             <script>

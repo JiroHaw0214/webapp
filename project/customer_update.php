@@ -18,18 +18,27 @@ checkSession();
         <?php include 'includes/navbar.php'; ?>
 
         <?php
+        $id = isset($_GET['id']) ? $_GET['id'] : die('ERROR: Record ID not found.');
         // Include database connection and fetch customer data
         include 'config/database.php';
-
         try {
-            $query = "SELECT  id, image FROM customers WHERE id = ? LIMIT 0,1";
+            $query = "SELECT id, username, password, first_name, last_name, gender, date_of_birth, email, account_status, image FROM customers WHERE id = ? LIMIT 0,1";
             $stmt = $con->prepare($query);
             $stmt->bindParam(1, $id);
             $stmt->execute();
-            if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                $image = $row['image'];
-            }
-        } catch (PDOException $exception) {
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $username = $row['username'];
+            $password = $row['password'];
+            $first_name = $row['first_name'];
+            $last_name = $row['last_name'];
+            $gender = $row['gender'];
+            $date_of_birth = $row['date_of_birth'];
+            $email = $row['email'];
+            $account_status = $row['account_status'];
+            $image = $row['image'];
+        }
+        // show error
+        catch (PDOException $exception) {
             die('ERROR: ' . $exception->getMessage());
         }
 
@@ -66,7 +75,6 @@ checkSession();
             } else {
                 $date_of_birth  = $_POST['date_of_birth'];
             }
-            echo "Image Path: " . $imagePath . "<br>";
 
             // Check if any of the password fields is filled out
             if (!empty($_POST['old_password']) || !empty($_POST['new_password']) || !empty($_POST['confirm_password'])) {
@@ -118,6 +126,9 @@ checkSession();
             }
 
             if (!empty($_FILES["new_image"]["name"])) {
+                if (!empty($image) && file_exists("uploads/{$image}")) {
+                    unlink("uploads/{$image}");
+                }
                 $new_image = $_FILES["new_image"];
                 $upload_dir = "uploads/";
                 $original_image_name = basename($new_image["name"]);
@@ -232,7 +243,6 @@ checkSession();
                 <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" value="<?php echo $customer['date_of_birth']; ?>" max="<?php echo date('Y-m-d'); ?>">
             </div>
             <!-- Existing Image -->
-            <!-- Existing Image -->
             <div class="mb-3">
                 <label for="current_image" class="form-label"></label>
                 <?php
@@ -240,11 +250,10 @@ checkSession();
                     echo "<img src='uploads/{$image}' class='customer-image' alt='Customer Image'>";
                     echo "<br><input type='checkbox' name='delete_image' value='1'> Delete Current Image";
                 } else {
-                    echo '<img src="img/customer.jpg" height="100px" alt="Default Customer Image">';
+                    echo '<img src="img/customer.jpg" height="100px" alt="">'; // 移除多余的</td>
                 }
                 ?>
             </div>
-
 
             <!-- Upload New Image -->
             <div class="mb-3">

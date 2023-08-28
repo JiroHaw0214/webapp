@@ -15,7 +15,11 @@
     function getLatestOrder($con)
     {
         // ifnull also can
-        $query = "SELECT order_summary.id, customers.first_name, order_summary.order_date, SUM(CASE WHEN products.promotion_price IS NOT NULL THEN products.promotion_price * order_details.quantity ELSE products.price * order_details.quantity END) AS total_amount
+        $query = "SELECT order_summary.id, customers.first_name, order_summary.order_date, SUM(CASE 
+        WHEN products.promotion_price IS NOT NULL AND products.promotion_price != 0 
+        THEN products.promotion_price * order_details.quantity 
+        ELSE products.price * order_details.quantity 
+      END) AS total_amount
                 FROM order_summary
                 INNER JOIN customers ON order_summary.customer_id = customers.id
                 INNER JOIN order_details ON order_summary.id = order_details.order_id
@@ -31,7 +35,11 @@
     // Function to fetch the order with the highest purchased amount
     function getHighestPurchaseOrder($con)
     {
-        $query = "SELECT order_summary.id, customers.first_name, order_summary.order_date, SUM(CASE WHEN products.promotion_price IS NOT NULL THEN products.promotion_price * order_details.quantity ELSE products.price * order_details.quantity END) AS total_amount
+        $query = "SELECT order_summary.id, customers.first_name, order_summary.order_date, SUM(CASE 
+        WHEN products.promotion_price IS NOT NULL AND products.promotion_price != 0 
+        THEN products.promotion_price * order_details.quantity 
+        ELSE products.price * order_details.quantity 
+      END) AS total_amount
                 FROM order_summary
                 INNER JOIN customers ON order_summary.customer_id = customers.id
                 INNER JOIN order_details ON order_summary.id = order_details.order_id

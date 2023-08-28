@@ -36,6 +36,32 @@ checkSession();
         if ($action == 'deleted') {
             echo "<div class='alert alert-success'>Record was deleted.</div>";
         }
+        if ($action == "fail") {
+            if (isset($_SESSION['orderIds']) && is_array($_SESSION['orderIds'])) {
+                $orderIds = $_SESSION['orderIds'];
+        ?>
+                <div class="alert alert-warning">
+                    <strong>Warning:</strong> This customer have the following orders:
+                    <ul>
+                        <?php foreach ($orderIds as $orderId) { ?>
+                            <li>Order ID: <?php echo $orderId; ?></li>
+                        <?php } ?>
+                    </ul>
+                    You cannot delete this customer until these orders removed.
+                </div>
+            <?php
+            } else {
+            ?>
+                <div class="alert alert-danger">
+                    <strong>Error:</strong> An error occurred.
+                </div>
+        <?php
+            }
+        }
+
+
+        // 清除已使用的session变量
+        unset($_SESSION['orderIds']);
         $searchKeyword = isset($_GET['search']) ? $_GET['search'] : '';
         $query = "SELECT id, username, first_name, last_name, email, image FROM customers";
         if (!empty($searchKeyword)) {

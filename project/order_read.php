@@ -15,7 +15,7 @@ checkSession();
         <?php
         include 'includes/navbar.php';
         ?>
-        <div class="page-header">
+        <div class="p-3">
             <h1>Order List</h1>
         </div>
         <?php
@@ -29,7 +29,7 @@ checkSession();
         }
         try {
             // Select all categories from the database
-            $query = "SELECT order_summary.id, customers.first_name, order_summary.order_date FROM order_summary INNER JOIN customers ON order_summary.customer_id = customers.id ORDER BY order_summary.order_date DESC";
+            $query = "SELECT order_summary.id, customers.first_name, customers.last_name, order_summary.order_date FROM order_summary INNER JOIN customers ON order_summary.customer_id = customers.id ORDER BY order_summary.order_date DESC";
             $stmt = $con->prepare($query);
             $stmt->execute();
             // Check if there are any
@@ -39,7 +39,7 @@ checkSession();
                 echo "<tr>";
                 echo "<th>Order ID</th>";
                 echo "<th>Customer Name</th>";
-                echo "<th>Order Date</th>";
+                echo "<th>Order Date & Time</th>";
                 echo "<th>Total Amount</th>";
                 echo "<th>Action</th>";
                 echo "</tr>";
@@ -48,7 +48,14 @@ checkSession();
                     // this will make $row['firstname'] to just $firstname only
                     extract($row);
                     // Get total amount for this order
-                    $totalAmountQuery = "SELECT SUM(IFNULL(products.promotion_price, products.price) * order_details.quantity) AS total_amount FROM order_details INNER JOIN products ON order_details.product_id = products.id WHERE order_details.order_id = :order_id";
+                    $totalAmountQuery = "SELECT SUM(CASE 
+                        WHEN products.promotion_price IS NOT NULL AND products.promotion_price != 0 
+                        THEN products.promotion_price * order_details.quantity 
+                        ELSE products.price * order_details.quantity 
+                        END) AS total_amount
+                        FROM order_details
+                        INNER JOIN products ON order_details.product_id = products.id
+                        WHERE order_details.order_id = :order_id";
                     $totalAmountStmt = $con->prepare($totalAmountQuery);
                     $totalAmountStmt->bindParam(":order_id", $id);
                     $totalAmountStmt->execute();
@@ -57,7 +64,7 @@ checkSession();
                     // creating new table row per record
                     echo "<tr>";
                     echo "<td>{$id}</td>";
-                    echo "<td>{$first_name}</td>";
+                    echo "<td>{$first_name} {$last_name}</td>";
                     echo "<td>{$order_date}</td>";
                     echo "<td class='text-end'>" . number_format($totalAmount, 2) . "</td>";
                     echo "<td>";

@@ -23,14 +23,13 @@ checkSession();
             $id = isset($_GET['id']) ? $_GET['id'] : die('ERROR: Record ID not found.');
 
             // Fetch customer name and order date from the database
-            $orderInfoQuery = "SELECT customers.first_name, order_summary.order_date FROM order_summary INNER JOIN customers ON order_summary.customer_id = customers.id WHERE order_summary.id = :id";
+            $orderInfoQuery = "SELECT CONCAT(customers.first_name, ' ', customers.last_name) AS full_name, order_summary.order_date FROM order_summary INNER JOIN customers ON order_summary.customer_id = customers.id WHERE order_summary.id = :id";
             $orderInfoStmt = $con->prepare($orderInfoQuery);
             $orderInfoStmt->bindParam(":id", $id);
             $orderInfoStmt->execute();
             $orderInfoRow = $orderInfoStmt->fetch(PDO::FETCH_ASSOC);
-
-            echo "<p><strong>Customer Name:</strong> {$orderInfoRow['first_name']}</p>";
-            echo "<p><strong>Order Date:</strong> {$orderInfoRow['order_date']}</p>";
+            echo "<p><strong>Customer Name:</strong> {$orderInfoRow['full_name']}</p>";
+            echo "<p><strong>Order Date & Time:</strong> {$orderInfoRow['order_date']}</p>";
             ?>
         </div>
         <?php
@@ -54,7 +53,7 @@ checkSession();
             $counter = 1;
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 extract($row);
-                $productPrice = !empty($promotion_price) ? $promotion_price : $price;
+                $productPrice = (!empty($promotion_price) && $promotion_price != 0) ? $promotion_price : $price;
                 $subtotal = $quantity * $productPrice;
                 $totalPrice += $subtotal;
                 echo "<tr>";
@@ -62,7 +61,7 @@ checkSession();
                 echo "<td>{$name}</td>";
                 echo "<td>{$quantity}</td>";
                 echo "<td class='text-end'>";
-                if (!empty($promotion_price)) {
+                if (!empty($promotion_price) && $promotion_price != 0) {
                     echo "<div class='text-decoration-line-through'>" . number_format($price, 2) . "</div>";
                     echo number_format($promotion_price, 2);
                 } else {

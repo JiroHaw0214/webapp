@@ -121,6 +121,9 @@ checkSession();
                         }
 
                         if (!empty($_FILES["new_image"]["name"])) {
+                            if (!empty($image) && file_exists("uploads/{$image}")) {
+                                unlink("uploads/{$image}");
+                            }
                             $new_image = $_FILES["new_image"];
                             $upload_dir = "uploads/";
                             $original_image_name = basename($new_image["name"]);
