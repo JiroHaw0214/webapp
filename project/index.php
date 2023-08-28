@@ -72,8 +72,7 @@
         $query = "SELECT products.name
                 FROM products
                 LEFT JOIN order_details ON products.id = order_details.product_id
-                WHERE order_details.id IS NULL
-                LIMIT 3";
+                WHERE order_details.id IS NULL";
         $stmt = $con->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
